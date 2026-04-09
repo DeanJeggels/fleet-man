@@ -113,7 +113,7 @@ export function UberApiTab() {
               }
             />
           </div>
-          <Button onClick={handleSave} disabled={saving} className="w-fit">
+          <Button onClick={handleSave} disabled={saving} className="w-fit cursor-pointer">
             {saving ? "Saving..." : "Save Settings"}
           </Button>
         </div>

@@ -96,13 +96,14 @@ export function TelegramTab() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleSave} disabled={saving}>
+            <Button onClick={handleSave} disabled={saving} className="cursor-pointer">
               {saving ? "Saving..." : "Save"}
             </Button>
             <Button
               variant="outline"
               onClick={handleTestMessage}
               disabled={sending || !chatId}
+              className="cursor-pointer"
             >
               <Send className="size-4" data-icon="inline-start" />
               {sending ? "Sending..." : "Send Test Message"}

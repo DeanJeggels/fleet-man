@@ -193,6 +193,8 @@ export function EventTypesTab() {
                 e.stopPropagation();
                 openEdit(row);
               }}
+              aria-label={`Edit ${row.name}`}
+              className="cursor-pointer"
             >
               <Pencil className="size-3.5" />
             </Button>
@@ -203,6 +205,8 @@ export function EventTypesTab() {
                 e.stopPropagation();
                 handleDelete(row);
               }}
+              aria-label={`Delete ${row.name}`}
+              className="cursor-pointer"
             >
               <Trash2 className="size-3.5 text-destructive" />
             </Button>
@@ -223,7 +227,7 @@ export function EventTypesTab() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger
             render={
-              <Button onClick={openAdd}>
+              <Button onClick={openAdd} className="cursor-pointer">
                 <Plus className="size-4" data-icon="inline-start" />
                 Add Type
               </Button>
@@ -279,7 +283,7 @@ export function EventTypesTab() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleSubmit} disabled={submitting}>
+              <Button onClick={handleSubmit} disabled={submitting} className="cursor-pointer">
                 {submitting
                   ? "Saving..."
                   : editingId

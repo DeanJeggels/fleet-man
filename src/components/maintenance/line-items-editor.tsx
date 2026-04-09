@@ -72,7 +72,7 @@ export function LineItemsEditor({ items, onChange }: LineItemsEditorProps) {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium">Line Items</h3>
-        <Button variant="outline" size="sm" onClick={addRow}>
+        <Button variant="outline" size="sm" onClick={addRow} className="cursor-pointer">
           <PlusIcon className="size-3.5" />
           Add Row
         </Button>
@@ -101,6 +101,7 @@ export function LineItemsEditor({ items, onChange }: LineItemsEditorProps) {
             >
               <Input
                 placeholder="Description"
+                aria-label="Line item description"
                 value={item.description}
                 onChange={(e) =>
                   updateItem(item.id, "description", e.target.value)
@@ -127,6 +128,7 @@ export function LineItemsEditor({ items, onChange }: LineItemsEditorProps) {
                 type="number"
                 min={0}
                 step={1}
+                aria-label="Quantity"
                 value={item.quantity}
                 onChange={(e) =>
                   updateItem(
@@ -140,6 +142,7 @@ export function LineItemsEditor({ items, onChange }: LineItemsEditorProps) {
                 type="number"
                 min={0}
                 step={0.01}
+                aria-label="Unit cost"
                 value={item.unit_cost}
                 onChange={(e) =>
                   updateItem(
@@ -153,7 +156,8 @@ export function LineItemsEditor({ items, onChange }: LineItemsEditorProps) {
                 variant="ghost"
                 size="icon-xs"
                 onClick={() => removeRow(item.id)}
-                className="mt-1 sm:mt-0"
+                className="mt-1 sm:mt-0 cursor-pointer"
+                aria-label={`Remove line item: ${item.description || "untitled"}`}
               >
                 <XIcon className="size-3.5" />
               </Button>

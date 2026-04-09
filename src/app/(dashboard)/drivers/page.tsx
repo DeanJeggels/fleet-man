@@ -146,7 +146,7 @@ export default function DriversPage() {
         title="Drivers"
         description="Manage your fleet drivers"
         action={
-          <Button onClick={handleAdd}>
+          <Button onClick={handleAdd} className="cursor-pointer">
             <Plus className="mr-1.5 h-4 w-4" />
             Add Driver
           </Button>

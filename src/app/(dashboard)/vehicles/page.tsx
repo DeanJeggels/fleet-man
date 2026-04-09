@@ -159,6 +159,7 @@ export default function VehiclesPage() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search registration, make, model..."
+            aria-label="Search vehicles"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"

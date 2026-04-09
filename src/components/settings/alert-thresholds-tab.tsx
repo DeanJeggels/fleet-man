@@ -95,7 +95,7 @@ export function AlertThresholdsTab() {
               next service date.
             </p>
           </div>
-          <Button onClick={handleSave} disabled={saving} className="w-fit">
+          <Button onClick={handleSave} disabled={saving} className="w-fit cursor-pointer">
             {saving ? "Saving..." : "Save Thresholds"}
           </Button>
         </div>

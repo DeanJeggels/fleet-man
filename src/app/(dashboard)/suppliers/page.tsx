@@ -64,7 +64,7 @@ export default function SuppliersPage() {
         title="Suppliers"
         description="Manage your fleet maintenance suppliers"
         action={
-          <Button onClick={() => setSheetOpen(true)}>
+          <Button onClick={() => setSheetOpen(true)} className="cursor-pointer">
             <Plus className="mr-1.5 h-4 w-4" />
             Add Supplier
           </Button>

@@ -275,10 +275,11 @@ export function DriverFormSheet({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={saving}
+            className="cursor-pointer"
           >
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
+          <Button onClick={handleSave} disabled={saving} className="cursor-pointer">
             {saving ? "Saving..." : isEdit ? "Update Driver" : "Add Driver"}
           </Button>
         </SheetFooter>

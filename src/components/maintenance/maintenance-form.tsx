@@ -231,6 +231,7 @@ export function MaintenanceForm() {
                     <input
                       className="flex h-7 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                       placeholder="Search suppliers..."
+                      aria-label="Search suppliers"
                       value={supplierSearch}
                       onChange={(e) => setSupplierSearch(e.target.value)}
                       onKeyDown={(e) => e.stopPropagation()}
@@ -377,7 +378,7 @@ export function MaintenanceForm() {
 
         {/* Save Button */}
         <Button
-          className="w-full"
+          className="w-full cursor-pointer"
           size="lg"
           onClick={handleSave}
           disabled={saving || !vehicleId}

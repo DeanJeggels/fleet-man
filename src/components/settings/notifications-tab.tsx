@@ -98,8 +98,9 @@ export function NotificationsTab() {
                 type="button"
                 role="switch"
                 aria-checked={settings[type.key]}
+                aria-label={type.label}
                 onClick={() => toggle(type.key)}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors ${
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-150 ${
                   settings[type.key] ? "bg-primary" : "bg-input"
                 }`}
               >
@@ -111,7 +112,7 @@ export function NotificationsTab() {
               </button>
             </div>
           ))}
-          <Button onClick={handleSave} disabled={saving} className="w-fit">
+          <Button onClick={handleSave} disabled={saving} className="w-fit cursor-pointer">
             {saving ? "Saving..." : "Save Preferences"}
           </Button>
         </div>

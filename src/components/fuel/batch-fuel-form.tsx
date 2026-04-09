@@ -159,6 +159,7 @@ export function BatchFuelForm({ vehicles, onSaved }: BatchFuelFormProps) {
                       value={row.date}
                       onChange={(e) => updateRow(i, "date", e.target.value)}
                       className="w-36"
+                      aria-label={`Date for ${row.registration}`}
                     />
                   </TableCell>
                   <TableCell>
@@ -170,6 +171,7 @@ export function BatchFuelForm({ vehicles, onSaved }: BatchFuelFormProps) {
                       value={row.litres}
                       onChange={(e) => updateRow(i, "litres", e.target.value)}
                       className="w-24"
+                      aria-label={`Litres for ${row.registration}`}
                     />
                   </TableCell>
                   <TableCell>
@@ -183,6 +185,7 @@ export function BatchFuelForm({ vehicles, onSaved }: BatchFuelFormProps) {
                         updateRow(i, "cost_per_litre", e.target.value)
                       }
                       className="w-24"
+                      aria-label={`Cost per litre for ${row.registration}`}
                     />
                   </TableCell>
                   <TableCell>
@@ -194,6 +197,7 @@ export function BatchFuelForm({ vehicles, onSaved }: BatchFuelFormProps) {
                       value={row.odometer}
                       onChange={(e) => updateRow(i, "odometer", e.target.value)}
                       className="w-28"
+                      aria-label={`Odometer for ${row.registration}`}
                     />
                   </TableCell>
                 </TableRow>

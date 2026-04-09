@@ -152,7 +152,7 @@ export function SupplierFormSheet({
           </div>
 
           <SheetFooter>
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" disabled={saving} className="cursor-pointer">
               {saving ? "Saving..." : "Save"}
             </Button>
           </SheetFooter>
