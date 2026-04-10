@@ -13,6 +13,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { format, parseISO } from "date-fns";
+import { useFleet } from "@/contexts/fleet-context";
 
 const formatZAR = new Intl.NumberFormat("en-ZA", {
   style: "currency",
@@ -60,23 +61,26 @@ interface FuelTabProps {
 }
 
 export function FuelTab({ vehicleId }: FuelTabProps) {
+  const { fleetId } = useFleet();
   const [data, setData] = useState<FuelRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!fleetId) return;
     async function fetchFuel() {
       const supabase = createClient();
       const { data: logs } = await supabase
         .from("fuel_logs")
         .select("id, week_starting, litres, cost, odometer_reading")
         .eq("vehicle_id", vehicleId)
+        .eq("fleet_id", fleetId!)
         .order("week_starting", { ascending: true });
 
       setData((logs as unknown as FuelRow[]) ?? []);
       setLoading(false);
     }
     fetchFuel();
-  }, [vehicleId]);
+  }, [vehicleId, fleetId]);
 
   const chartData = data.map((row) => ({
     date: format(parseISO(row.week_starting), "dd MMM"),

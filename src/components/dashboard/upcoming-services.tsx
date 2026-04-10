@@ -5,6 +5,7 @@ import { format, differenceInDays } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase/client";
+import { useFleet } from "@/contexts/fleet-context";
 
 interface UpcomingService {
   id: string;
@@ -34,15 +35,18 @@ const statusDot = {
 } as const;
 
 export function UpcomingServices() {
+  const { fleetId } = useFleet();
   const [services, setServices] = useState<UpcomingService[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!fleetId) return;
     async function fetchData() {
       const supabase = createClient();
       const { data } = await supabase
         .from("service_schedules")
         .select("id, next_service_date, next_service_km, vehicle_id, vehicles(registration)")
+        .eq("fleet_id", fleetId!)
         .not("next_service_date", "is", null)
         .order("next_service_date", { ascending: true })
         .limit(5);
@@ -60,7 +64,7 @@ export function UpcomingServices() {
       setLoading(false);
     }
     fetchData();
-  }, []);
+  }, [fleetId]);
 
   if (loading) {
     return (

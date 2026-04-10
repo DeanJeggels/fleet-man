@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Lock, Plus, Pencil, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useFleet } from "@/contexts/fleet-context";
 import type { MaintenanceEventType, MaintenanceCategory } from "@/types/database";
 import { DataTable, type ColumnDef } from "@/components/shared/data-table";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,7 @@ interface EventTypeForm {
 }
 
 export function EventTypesTab() {
+  const { fleetId } = useFleet();
   const [data, setData] = useState<MaintenanceEventType[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -60,11 +62,13 @@ export function EventTypesTab() {
   const [submitting, setSubmitting] = useState(false);
 
   const fetchData = useCallback(async () => {
+    if (!fleetId) return;
     setLoading(true);
     const supabase = createClient();
     const { data: rows, error } = await supabase
       .from("maintenance_event_types")
       .select("*")
+      .eq("fleet_id", fleetId!)
       .order("sort_order", { ascending: true });
 
     if (error) {
@@ -73,11 +77,12 @@ export function EventTypesTab() {
       setData(rows ?? []);
     }
     setLoading(false);
-  }, []);
+  }, [fleetId]);
 
   useEffect(() => {
+    if (!fleetId) return;
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, fleetId]);
 
   function openAdd() {
     setEditingId(null);
@@ -117,7 +122,7 @@ export function EventTypesTab() {
       const maxSort = data.length > 0 ? Math.max(...data.map((d) => d.sort_order)) + 1 : 0;
       const { error } = await supabase
         .from("maintenance_event_types")
-        .insert({ name: form.name, category: form.category, sort_order: maxSort });
+        .insert({ name: form.name, category: form.category, sort_order: maxSort, fleet_id: fleetId! });
 
       if (error) {
         toast.error("Failed to create event type");

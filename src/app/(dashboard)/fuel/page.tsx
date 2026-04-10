@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useFleet } from "@/contexts/fleet-context";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable, type ColumnDef } from "@/components/shared/data-table";
 import { BatchFuelForm } from "@/components/fuel/batch-fuel-form";
@@ -64,6 +65,7 @@ const columns: ColumnDef<Record<string, unknown>>[] = [
 ];
 
 export default function FuelPage() {
+  const { fleetId } = useFleet();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [logs, setLogs] = useState<FuelLogRow[]>([]);
   const [loadingVehicles, setLoadingVehicles] = useState(true);
@@ -72,10 +74,12 @@ export default function FuelPage() {
   const supabase = createClient();
 
   const fetchLogs = useCallback(async () => {
+    if (!fleetId) return;
     setLoadingLogs(true);
     const { data } = await supabase
       .from("fuel_logs")
       .select("*, vehicle:vehicles(registration)")
+      .eq("fleet_id", fleetId!)
       .order("created_at", { ascending: false })
       .limit(20);
 
@@ -93,13 +97,16 @@ export default function FuelPage() {
       );
     }
     setLoadingLogs(false);
-  }, [supabase]);
+  }, [supabase, fleetId]);
 
   useEffect(() => {
+    if (!fleetId) return;
+
     async function fetchVehicles() {
       const { data } = await supabase
         .from("vehicles")
         .select("id, registration")
+        .eq("fleet_id", fleetId!)
         .eq("status", "active")
         .order("registration");
 
@@ -109,7 +116,7 @@ export default function FuelPage() {
 
     fetchVehicles();
     fetchLogs();
-  }, [supabase, fetchLogs]);
+  }, [supabase, fetchLogs, fleetId]);
 
   return (
     <div className="space-y-6">

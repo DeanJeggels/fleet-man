@@ -31,6 +31,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { useFleet } from "@/contexts/fleet-context";
 
 const STATUS_OPTIONS: VehicleStatus[] = [
   "active",
@@ -52,6 +53,7 @@ export function VehicleFormSheet({
   vehicle,
   onSaved,
 }: VehicleFormSheetProps) {
+  const { fleetId } = useFleet();
   const isEdit = !!vehicle;
 
   const [registration, setRegistration] = useState("");
@@ -128,7 +130,7 @@ export function VehicleFormSheet({
       }
       toast.success("Vehicle updated");
     } else {
-      const { error } = await supabase.from("vehicles").insert(payload);
+      const { error } = await supabase.from("vehicles").insert({ ...payload, fleet_id: fleetId! });
 
       if (error) {
         toast.error("Failed to add vehicle", { description: error.message });

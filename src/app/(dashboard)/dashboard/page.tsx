@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Car, DollarSign, Wrench, Route } from "lucide-react";
 import { startOfMonth, format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
+import { useFleet } from "@/contexts/fleet-context";
 import { KPICard } from "@/components/shared/kpi-card";
 import { PageHeader } from "@/components/shared/page-header";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
@@ -19,6 +20,7 @@ const zarFormat = new Intl.NumberFormat("en-ZA", {
 });
 
 export default function DashboardPage() {
+  const { fleetId } = useFleet();
   const [loading, setLoading] = useState(true);
   const [activeVehicles, setActiveVehicles] = useState(0);
   const [totalVehicles, setTotalVehicles] = useState(0);
@@ -27,6 +29,7 @@ export default function DashboardPage() {
   const [fleetKm, setFleetKm] = useState(0);
 
   useEffect(() => {
+    if (!fleetId) return;
     async function fetchKPIs() {
       const supabase = createClient();
       const monthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
@@ -37,18 +40,21 @@ export default function DashboardPage() {
         { data: tripEarnings },
         { data: tripDistances },
       ] = await Promise.all([
-        supabase.from("vehicles").select("status"),
+        supabase.from("vehicles").select("status").eq("fleet_id", fleetId!),
         supabase
           .from("maintenance_events")
           .select("cost_total")
+          .eq("fleet_id", fleetId!)
           .gte("event_date", monthStart),
         supabase
           .from("uber_trip_data")
           .select("total_earnings")
+          .eq("fleet_id", fleetId!)
           .gte("period_date", monthStart),
         supabase
           .from("uber_trip_data")
           .select("distance_km")
+          .eq("fleet_id", fleetId!)
           .gte("period_date", monthStart),
       ]);
 
@@ -80,7 +86,7 @@ export default function DashboardPage() {
       setLoading(false);
     }
     fetchKPIs();
-  }, []);
+  }, [fleetId]);
 
   return (
     <div className="space-y-6">

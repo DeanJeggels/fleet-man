@@ -3,12 +3,14 @@
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useFleet } from "@/contexts/fleet-context";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { NotificationBell } from "./notification-bell";
 
 export function Topbar() {
   const router = useRouter();
+  const { displayName } = useFleet();
   const supabase = createClient();
 
   async function handleLogout() {
@@ -23,6 +25,11 @@ export function Topbar() {
         <SidebarTrigger className="lg:hidden cursor-pointer" />
       </div>
       <div className="flex items-center gap-2">
+        {displayName && (
+          <span className="hidden sm:block text-sm text-muted-foreground">
+            {displayName}
+          </span>
+        )}
         <NotificationBell />
         <Button
           variant="ghost"

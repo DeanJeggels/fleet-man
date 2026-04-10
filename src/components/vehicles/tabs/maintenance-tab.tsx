@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import Link from "next/link";
+import { useFleet } from "@/contexts/fleet-context";
 
 const formatZAR = new Intl.NumberFormat("en-ZA", {
   style: "currency",
@@ -69,10 +70,12 @@ interface MaintenanceTabProps {
 }
 
 export function MaintenanceTab({ vehicleId }: MaintenanceTabProps) {
+  const { fleetId } = useFleet();
   const [data, setData] = useState<MaintenanceRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!fleetId) return;
     async function fetch() {
       const supabase = createClient();
       const { data: events } = await supabase
@@ -81,13 +84,14 @@ export function MaintenanceTab({ vehicleId }: MaintenanceTabProps) {
           "id, event_date, category, cost_total, invoice_parsed_by_ai, event_type:maintenance_event_types(name), supplier:suppliers(name)"
         )
         .eq("vehicle_id", vehicleId)
+        .eq("fleet_id", fleetId!)
         .order("event_date", { ascending: false });
 
       setData((events as unknown as MaintenanceRow[]) ?? []);
       setLoading(false);
     }
     fetch();
-  }, [vehicleId]);
+  }, [vehicleId, fleetId]);
 
   return (
     <div className="space-y-4">

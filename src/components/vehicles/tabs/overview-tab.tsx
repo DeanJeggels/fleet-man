@@ -16,6 +16,7 @@ import { Wrench, Fuel, DollarSign, MapPin } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ServiceScheduleCard } from "@/components/vehicles/service-schedule-card";
 import type { Tables } from "@/types/database";
+import { useFleet } from "@/contexts/fleet-context";
 
 const formatZAR = new Intl.NumberFormat("en-ZA", {
   style: "currency",
@@ -33,10 +34,12 @@ interface MonthlyCost {
 }
 
 export function OverviewTab({ vehicle }: OverviewTabProps) {
+  const { fleetId } = useFleet();
   const [monthlyCosts, setMonthlyCosts] = useState<MonthlyCost[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!fleetId) return;
     async function fetchMonthlyCosts() {
       const supabase = createClient();
 
@@ -45,11 +48,13 @@ export function OverviewTab({ vehicle }: OverviewTabProps) {
           .from("maintenance_events")
           .select("event_date, cost_total")
           .eq("vehicle_id", vehicle.id)
+          .eq("fleet_id", fleetId!)
           .order("event_date", { ascending: true }),
         supabase
           .from("fuel_logs")
           .select("week_starting, cost")
           .eq("vehicle_id", vehicle.id)
+          .eq("fleet_id", fleetId!)
           .order("week_starting", { ascending: true }),
       ]);
 
@@ -78,7 +83,7 @@ export function OverviewTab({ vehicle }: OverviewTabProps) {
     }
 
     fetchMonthlyCosts();
-  }, [vehicle.id]);
+  }, [vehicle.id, fleetId]);
 
   return (
     <div className="space-y-6">

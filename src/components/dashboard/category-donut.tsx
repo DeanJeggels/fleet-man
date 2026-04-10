@@ -13,6 +13,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase/client";
+import { useFleet } from "@/contexts/fleet-context";
 import type { MaintenanceCategory } from "@/types/database";
 
 const COLORS = ["#3B82F6", "#EF4444", "#22C55E", "#F59E0B", "#8B5CF6", "#F97316"];
@@ -58,17 +59,20 @@ function CustomTooltip({
 }
 
 export function CategoryDonut() {
+  const { fleetId } = useFleet();
   const [data, setData] = useState<CategorySlice[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
 
   useEffect(() => {
+    if (!fleetId) return;
     async function fetchData() {
       const supabase = createClient();
       const { data: events } = await supabase
         .from("maintenance_events")
-        .select("category, cost_total");
+        .select("category, cost_total")
+        .eq("fleet_id", fleetId!);
 
       if (!events) {
         setLoading(false);
@@ -97,7 +101,7 @@ export function CategoryDonut() {
       setLoading(false);
     }
     fetchData();
-  }, []);
+  }, [fleetId]);
 
   if (loading) {
     return (

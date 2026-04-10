@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useFleet } from "@/contexts/fleet-context";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -32,6 +33,7 @@ export function SupplierFormSheet({
   supplier,
   onSaved,
 }: SupplierFormSheetProps) {
+  const { fleetId } = useFleet();
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState(supplier?.name ?? "");
   const [phone, setPhone] = useState(supplier?.phone ?? "");
@@ -71,7 +73,7 @@ export function SupplierFormSheet({
 
     const { error } = supplier
       ? await supabase.from("suppliers").update(payload).eq("id", supplier.id)
-      : await supabase.from("suppliers").insert(payload);
+      : await supabase.from("suppliers").insert({ ...payload, fleet_id: fleetId! });
 
     setSaving(false);
 

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { User } from "lucide-react";
+import { useFleet } from "@/contexts/fleet-context";
 
 interface AssignmentRow {
   id: string;
@@ -18,23 +19,26 @@ interface DriverHistoryTabProps {
 }
 
 export function DriverHistoryTab({ vehicleId }: DriverHistoryTabProps) {
+  const { fleetId } = useFleet();
   const [data, setData] = useState<AssignmentRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!fleetId) return;
     async function fetchAssignments() {
       const supabase = createClient();
       const { data: assignments } = await supabase
         .from("vehicle_driver_assignments")
         .select("id, assigned_at, unassigned_at, driver:drivers(first_name, last_name)")
         .eq("vehicle_id", vehicleId)
+        .eq("fleet_id", fleetId!)
         .order("assigned_at", { ascending: false });
 
       setData((assignments as unknown as AssignmentRow[]) ?? []);
       setLoading(false);
     }
     fetchAssignments();
-  }, [vehicleId]);
+  }, [vehicleId, fleetId]);
 
   if (loading) {
     return (

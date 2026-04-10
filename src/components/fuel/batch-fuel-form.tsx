@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { createClient } from "@/lib/supabase/client";
+import { useFleet } from "@/contexts/fleet-context";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,7 @@ function weekStarting(dateStr: string) {
 }
 
 export function BatchFuelForm({ vehicles, onSaved }: BatchFuelFormProps) {
+  const { fleetId } = useFleet();
   const [rows, setRows] = useState<RowData[]>(() =>
     vehicles.map((v) => ({
       vehicle_id: v.id,
@@ -102,6 +104,7 @@ export function BatchFuelForm({ vehicles, onSaved }: BatchFuelFormProps) {
       litres: parseFloat(row.litres),
       cost: parseFloat(row.litres) * parseFloat(row.cost_per_litre),
       odometer_reading: row.odometer ? parseInt(row.odometer, 10) : null,
+      fleet_id: fleetId!,
     }));
 
     const { error } = await supabase.from("fuel_logs").insert(inserts);

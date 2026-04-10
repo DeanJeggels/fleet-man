@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useFleet } from "@/contexts/fleet-context";
 import { differenceInDays, parseISO } from "date-fns";
 import { Plus } from "lucide-react";
 import type { Driver } from "@/types/database";
@@ -54,27 +55,31 @@ function LicenseExpiryBadge({ expiry }: { expiry: string }) {
 
 export default function DriversPage() {
   const supabase = createClient();
+  const { fleetId } = useFleet();
   const [drivers, setDrivers] = useState<DriverWithAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingDriver, setEditingDriver] = useState<Driver | null>(null);
 
   const fetchDrivers = useCallback(async () => {
+    if (!fleetId) return;
     setLoading(true);
     const { data } = await supabase
       .from("drivers")
       .select(
         "*, vehicle_driver_assignments(vehicle:vehicles(registration))"
       )
+      .eq("fleet_id", fleetId!)
       .order("last_name");
 
     setDrivers((data as DriverWithAssignment[]) ?? []);
     setLoading(false);
-  }, [supabase]);
+  }, [supabase, fleetId]);
 
   useEffect(() => {
+    if (!fleetId) return;
     fetchDrivers();
-  }, [fetchDrivers]);
+  }, [fetchDrivers, fleetId]);
 
   function handleAdd() {
     setEditingDriver(null);

@@ -6,6 +6,7 @@ import { DataTable, type ColumnDef } from "@/components/shared/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format, parseISO } from "date-fns";
+import { useFleet } from "@/contexts/fleet-context";
 
 const formatZAR = new Intl.NumberFormat("en-ZA", {
   style: "currency",
@@ -57,12 +58,14 @@ interface TripsTabProps {
 }
 
 export function TripsTab({ vehicleId }: TripsTabProps) {
+  const { fleetId } = useFleet();
   const [data, setData] = useState<TripRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
   useEffect(() => {
+    if (!fleetId) return;
     async function fetchTrips() {
       setLoading(true);
       const supabase = createClient();
@@ -70,6 +73,7 @@ export function TripsTab({ vehicleId }: TripsTabProps) {
         .from("uber_trip_data")
         .select("id, period_date, total_trips, hours_online, distance_km, total_earnings")
         .eq("vehicle_id", vehicleId)
+        .eq("fleet_id", fleetId!)
         .order("period_date", { ascending: false });
 
       if (dateFrom) {
@@ -84,7 +88,7 @@ export function TripsTab({ vehicleId }: TripsTabProps) {
       setLoading(false);
     }
     fetchTrips();
-  }, [vehicleId, dateFrom, dateTo]);
+  }, [vehicleId, fleetId, dateFrom, dateTo]);
 
   return (
     <div className="space-y-4">
