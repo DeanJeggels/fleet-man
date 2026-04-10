@@ -4,31 +4,31 @@ import * as React from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Skeleton } from "@/components/ui/skeleton"
 import { UploadIcon, FileIcon, CheckCircleIcon } from "lucide-react"
+import type { ParsedInvoice } from "@/types/database"
 import type { LineItem } from "./line-items-editor"
 
+export interface InvoiceUploadResult {
+  invoiceUrl: string | null
+  parsed: ParsedInvoice | null
+  lineItems: LineItem[]
+}
+
 interface InvoiceUploadProps {
-  onLineItemsParsed: (items: LineItem[]) => void
-  onInvoiceUrl: (url: string) => void
+  onParsed: (result: InvoiceUploadResult) => void
 }
 
 type UploadState = "idle" | "uploading" | "parsing" | "done" | "error"
 
-export function InvoiceUpload({
-  onLineItemsParsed,
-  onInvoiceUrl,
-}: InvoiceUploadProps) {
+export function InvoiceUpload({ onParsed }: InvoiceUploadProps) {
   const [state, setState] = React.useState<UploadState>("idle")
   const [progress, setProgress] = React.useState(0)
   const [fileName, setFileName] = React.useState<string | null>(null)
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null)
   const [dragOver, setDragOver] = React.useState(false)
+  const [parsedCount, setParsedCount] = React.useState(0)
   const inputRef = React.useRef<HTMLInputElement>(null)
 
-  const acceptedTypes = [
-    "image/jpeg",
-    "image/png",
-    "application/pdf",
-  ]
+  const acceptedTypes = ["image/jpeg", "image/png", "application/pdf"]
 
   async function handleFile(file: File) {
     if (!acceptedTypes.includes(file.type)) {
@@ -41,7 +41,6 @@ export function InvoiceUpload({
     setState("uploading")
     setProgress(0)
 
-    // Simulate upload progress
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 90) {
@@ -64,36 +63,32 @@ export function InvoiceUpload({
 
       clearInterval(progressInterval)
 
-      if (error) {
-        throw error
-      }
+      if (error) throw error
 
       setProgress(100)
       setState("parsing")
 
-      // The edge function returns parsed line items and the file URL
-      const invoiceUrl = data?.invoice_url as string | undefined
-      const parsedItems = data?.line_items as Array<{
-        description: string
-        item_type: string
-        quantity: number
-        unit_cost: number
-      }> | undefined
+      const invoiceUrl = (data?.invoice_url as string) || null
+      const parsed = (data?.parsed as ParsedInvoice) || null
 
-      if (invoiceUrl) {
-        onInvoiceUrl(invoiceUrl)
-      }
-
-      if (parsedItems && parsedItems.length > 0) {
-        const lineItems: LineItem[] = parsedItems.map((item) => ({
+      // Convert parsed line items to LineItem format
+      const lineItems: LineItem[] =
+        parsed?.line_items?.map((item) => ({
           id: crypto.randomUUID(),
           description: item.description || "",
-          item_type: (item.item_type || "other") as LineItem["item_type"],
+          item_type: item.item_type || "other",
           quantity: item.quantity || 1,
           unit_cost: item.unit_cost || 0,
-        }))
-        onLineItemsParsed(lineItems)
-      }
+          normalised_name: item.normalised_name || null,
+        })) ?? []
+
+      setParsedCount(lineItems.length)
+
+      onParsed({
+        invoiceUrl,
+        parsed,
+        lineItems,
+      })
 
       setState("done")
     } catch (err) {
@@ -163,7 +158,7 @@ export function InvoiceUpload({
                 Drop invoice here or click to browse
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                JPEG, PNG, or PDF
+                JPEG, PNG, or PDF &mdash; AI will auto-fill the form
               </p>
             </div>
           </>
@@ -205,7 +200,7 @@ export function InvoiceUpload({
             <CheckCircleIcon className="size-8 text-green-600" />
             <p className="text-sm font-medium">{fileName}</p>
             <p className="text-xs text-green-600">
-              Invoice parsed successfully
+              Invoice parsed &mdash; {parsedCount} line items extracted
             </p>
           </>
         )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,7 @@ export function BatchFuelForm({ vehicles, onSaved }: BatchFuelFormProps) {
     }))
   );
   const [saving, setSaving] = useState(false);
+  const isMobile = useIsMobile();
 
   const updateRow = useCallback(
     (index: number, field: keyof RowData, value: string) => {
@@ -136,75 +138,140 @@ export function BatchFuelForm({ vehicles, onSaved }: BatchFuelFormProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto max-h-[28rem] overflow-y-auto">
-          <Table>
-            <TableHeader className="sticky top-0 z-10 bg-card">
-              <TableRow>
-                <TableHead>Vehicle Registration</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Litres</TableHead>
-                <TableHead>Cost/L (ZAR)</TableHead>
-                <TableHead>Odometer</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((row, i) => (
-                <TableRow key={row.vehicle_id}>
-                  <TableCell className="font-medium">
-                    {row.registration}
-                  </TableCell>
-                  <TableCell>
+        {isMobile ? (
+          <div className="space-y-3 max-h-[28rem] overflow-y-auto">
+            {rows.map((row, i) => (
+              <div key={row.vehicle_id} className="rounded-lg border p-4 space-y-3">
+                <p className="text-sm font-medium">{row.registration}</p>
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Date</label>
                     <Input
                       type="date"
                       value={row.date}
                       onChange={(e) => updateRow(i, "date", e.target.value)}
-                      className="w-36"
                       aria-label={`Date for ${row.registration}`}
                     />
-                  </TableCell>
-                  <TableCell>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Litres</label>
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        step="0.01"
+                        placeholder="0.00"
+                        value={row.litres}
+                        onChange={(e) => updateRow(i, "litres", e.target.value)}
+                        aria-label={`Litres for ${row.registration}`}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">Cost/L (ZAR)</label>
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        step="0.01"
+                        placeholder="0.00"
+                        value={row.cost_per_litre}
+                        onChange={(e) => updateRow(i, "cost_per_litre", e.target.value)}
+                        aria-label={`Cost per litre for ${row.registration}`}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Odometer</label>
                     <Input
                       type="number"
-                      min={0}
-                      step="0.01"
-                      placeholder="0.00"
-                      value={row.litres}
-                      onChange={(e) => updateRow(i, "litres", e.target.value)}
-                      className="w-24"
-                      aria-label={`Litres for ${row.registration}`}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      placeholder="0.00"
-                      value={row.cost_per_litre}
-                      onChange={(e) =>
-                        updateRow(i, "cost_per_litre", e.target.value)
-                      }
-                      className="w-24"
-                      aria-label={`Cost per litre for ${row.registration}`}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
+                      inputMode="numeric"
                       min={0}
                       step="1"
                       placeholder="km"
                       value={row.odometer}
                       onChange={(e) => updateRow(i, "odometer", e.target.value)}
-                      className="w-28"
                       aria-label={`Odometer for ${row.registration}`}
                     />
-                  </TableCell>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="overflow-x-auto max-h-[28rem] overflow-y-auto">
+            <Table>
+              <TableHeader className="sticky top-0 z-10 bg-card">
+                <TableRow>
+                  <TableHead>Vehicle Registration</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Litres</TableHead>
+                  <TableHead>Cost/L (ZAR)</TableHead>
+                  <TableHead>Odometer</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {rows.map((row, i) => (
+                  <TableRow key={row.vehicle_id}>
+                    <TableCell className="font-medium">
+                      {row.registration}
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="date"
+                        value={row.date}
+                        onChange={(e) => updateRow(i, "date", e.target.value)}
+                        className="w-36"
+                        aria-label={`Date for ${row.registration}`}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        step="0.01"
+                        placeholder="0.00"
+                        value={row.litres}
+                        onChange={(e) => updateRow(i, "litres", e.target.value)}
+                        className="w-24"
+                        aria-label={`Litres for ${row.registration}`}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        inputMode="decimal"
+                        min={0}
+                        step="0.01"
+                        placeholder="0.00"
+                        value={row.cost_per_litre}
+                        onChange={(e) =>
+                          updateRow(i, "cost_per_litre", e.target.value)
+                        }
+                        className="w-24"
+                        aria-label={`Cost per litre for ${row.registration}`}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        step="1"
+                        placeholder="km"
+                        value={row.odometer}
+                        onChange={(e) => updateRow(i, "odometer", e.target.value)}
+                        className="w-28"
+                        aria-label={`Odometer for ${row.registration}`}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
         <div className="mt-4 flex justify-end">
           <Button onClick={handleSave} disabled={saving} className="cursor-pointer">
             {saving && <Loader2 className="animate-spin" />}

@@ -184,14 +184,14 @@ export default function ReportsPage() {
       {/* Filters Section */}
       <div className="rounded-lg border bg-white p-4 shadow-sm">
         <h2 className="mb-3 text-sm font-medium text-muted-foreground">Filters</h2>
-        <div className="flex flex-wrap items-end gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-end sm:gap-4">
           {/* Start Date */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium">Start Date</label>
             <Popover open={startOpen} onOpenChange={setStartOpen}>
               <PopoverTrigger
                 className={cn(
-                  "inline-flex h-9 w-[180px] items-center justify-start gap-2 rounded-md border px-3 text-sm",
+                  "inline-flex h-9 w-full sm:w-[180px] items-center justify-start gap-2 rounded-md border px-3 text-sm",
                   !startDate && "text-muted-foreground"
                 )}
               >
@@ -217,7 +217,7 @@ export default function ReportsPage() {
             <Popover open={endOpen} onOpenChange={setEndOpen}>
               <PopoverTrigger
                 className={cn(
-                  "inline-flex h-9 w-[180px] items-center justify-start gap-2 rounded-md border px-3 text-sm",
+                  "inline-flex h-9 w-full sm:w-[180px] items-center justify-start gap-2 rounded-md border px-3 text-sm",
                   !endDate && "text-muted-foreground"
                 )}
               >
@@ -241,7 +241,7 @@ export default function ReportsPage() {
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium">Vehicle</label>
             <Select value={vehicleId} onValueChange={(v) => setVehicleId(v ?? "all")}>
-              <SelectTrigger className="w-[220px]">
+              <SelectTrigger className="w-full sm:w-[220px]">
                 <SelectValue placeholder="All vehicles" />
               </SelectTrigger>
               <SelectContent>
@@ -260,7 +260,7 @@ export default function ReportsPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium">Supplier</label>
               <Select value={supplierId} onValueChange={(v) => setSupplierId(v ?? "all")}>
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-full sm:w-[200px]">
                   <SelectValue placeholder="All suppliers" />
                 </SelectTrigger>
                 <SelectContent>
@@ -276,7 +276,7 @@ export default function ReportsPage() {
           )}
 
           {/* Generate Button */}
-          <Button onClick={handleGenerate} className="h-9">
+          <Button onClick={handleGenerate} className="h-9 w-full sm:w-auto">
             <FileBarChart className="mr-1.5 h-4 w-4" />
             Generate Report
           </Button>

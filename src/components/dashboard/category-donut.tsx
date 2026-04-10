@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   PieChart,
   Pie,
@@ -60,6 +61,7 @@ export function CategoryDonut() {
   const [data, setData] = useState<CategorySlice[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     async function fetchData() {
@@ -111,7 +113,7 @@ export function CategoryDonut() {
       <h3 className="mb-4 text-sm font-medium text-muted-foreground">
         Maintenance by Category
       </h3>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
         <PieChart>
           <Pie
             data={data}
