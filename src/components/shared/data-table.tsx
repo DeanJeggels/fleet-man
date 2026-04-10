@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { ArrowUpDown, Search } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Table,
   TableBody,
@@ -87,6 +88,8 @@ export function DataTable<T extends Record<string, unknown>>({
     }
   }
 
+  const isMobile = useIsMobile();
+
   const totalPages = pagination
     ? Math.ceil(pagination.total / pagination.pageSize)
     : 1;
@@ -125,7 +128,7 @@ export function DataTable<T extends Record<string, unknown>>({
     return (
       <div className="space-y-3">
         {searchable && (
-          <div className="relative w-64">
+          <div className="relative w-full max-w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder={searchPlaceholder}
@@ -147,7 +150,7 @@ export function DataTable<T extends Record<string, unknown>>({
   return (
     <div className="space-y-3">
       {searchable && (
-        <div className="relative w-64">
+        <div className="relative w-full max-w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder={searchPlaceholder}
@@ -157,46 +160,69 @@ export function DataTable<T extends Record<string, unknown>>({
           />
         </div>
       )}
-      <div className="overflow-x-auto rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
+      {isMobile ? (
+        <div className="space-y-3">
+          {sorted.map((row, i) => (
+            <div
+              key={i}
+              onClick={onRowClick ? () => onRowClick(row) : undefined}
+              className={`rounded-lg border bg-card p-4 space-y-2 ${onRowClick ? "cursor-pointer active:bg-muted/50" : ""}`}
+            >
               {columns.map((col) => (
-                <TableHead key={col.key}>
-                  {col.sortable ? (
-                    <button
-                      onClick={() => handleSort(col.key)}
-                      className="inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      {col.header}
-                      <ArrowUpDown className="h-3.5 w-3.5" />
-                    </button>
-                  ) : (
-                    col.header
-                  )}
-                </TableHead>
+                <div key={col.key} className="flex items-start justify-between gap-2">
+                  <span className="text-xs font-medium text-muted-foreground shrink-0">
+                    {col.header}
+                  </span>
+                  <span className="text-sm text-right">
+                    {col.render ? col.render(row) : String(row[col.key] ?? "")}
+                  </span>
+                </div>
               ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sorted.map((row, i) => (
-              <TableRow
-                key={i}
-                onClick={onRowClick ? () => onRowClick(row) : undefined}
-                className={onRowClick ? "cursor-pointer hover:bg-muted/50" : ""}
-              >
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
                 {columns.map((col) => (
-                  <TableCell key={col.key}>
-                    {col.render
-                      ? col.render(row)
-                      : String(row[col.key] ?? "")}
-                  </TableCell>
+                  <TableHead key={col.key}>
+                    {col.sortable ? (
+                      <button
+                        onClick={() => handleSort(col.key)}
+                        className="inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        {col.header}
+                        <ArrowUpDown className="h-3.5 w-3.5" />
+                      </button>
+                    ) : (
+                      col.header
+                    )}
+                  </TableHead>
                 ))}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {sorted.map((row, i) => (
+                <TableRow
+                  key={i}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  className={onRowClick ? "cursor-pointer hover:bg-muted/50" : ""}
+                >
+                  {columns.map((col) => (
+                    <TableCell key={col.key}>
+                      {col.render
+                        ? col.render(row)
+                        : String(row[col.key] ?? "")}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
       {pagination && totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">

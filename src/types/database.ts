@@ -613,6 +613,7 @@ export type Database = {
           item_type: Database["public"]["Enums"]["line_item_type"]
           line_total: number | null
           maintenance_event_id: string
+          normalised_name: string | null
           quantity: number
           sort_order: number
           unit_cost: number
@@ -624,6 +625,7 @@ export type Database = {
           item_type?: Database["public"]["Enums"]["line_item_type"]
           line_total?: number | null
           maintenance_event_id: string
+          normalised_name?: string | null
           quantity?: number
           sort_order?: number
           unit_cost?: number
@@ -635,6 +637,7 @@ export type Database = {
           item_type?: Database["public"]["Enums"]["line_item_type"]
           line_total?: number | null
           maintenance_event_id?: string
+          normalised_name?: string | null
           quantity?: number
           sort_order?: number
           unit_cost?: number
@@ -1717,6 +1720,33 @@ export const Constants = {
     },
   },
 } as const
+
+// Invoice AI parsing types
+export interface ParsedInvoiceLineItem {
+  description: string
+  item_type: LineItemType
+  quantity: number
+  unit_cost: number
+  normalised_name: string
+}
+
+export interface ParsedInvoice {
+  supplier_name: string | null
+  supplier_phone: string | null
+  supplier_address: string | null
+  vehicle_registration: string | null
+  odometer_reading: number | null
+  invoice_date: string | null
+  invoice_number: string | null
+  subtotal: number | null
+  vat_inclusive: boolean
+  total: number | null
+  line_items: ParsedInvoiceLineItem[]
+  description_summary: string | null
+  inferred_event_type: string | null
+  inferred_category: MaintenanceCategory | null
+  confidence: number
+}
 
 // Convenience types for fleet tables
 export type Vehicle = Tables<"vehicles">;

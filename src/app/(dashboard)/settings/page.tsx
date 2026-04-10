@@ -18,26 +18,30 @@ export default function SettingsPage() {
       />
 
       <Tabs defaultValue={0}>
-        <TabsList variant="line" className="w-full justify-start">
-          <TabsTrigger value={0}>
+        <TabsList variant="line" className="w-full justify-start overflow-x-auto scrollbar-none scroll-smooth snap-x snap-mandatory">
+          <TabsTrigger value={0} className="snap-start shrink-0">
             <Wifi className="size-4" />
-            Uber API
+            <span className="sm:hidden">API</span>
+            <span className="hidden sm:inline">Uber API</span>
           </TabsTrigger>
-          <TabsTrigger value={1}>
+          <TabsTrigger value={1} className="snap-start shrink-0">
             <Bell className="size-4" />
-            Notifications
+            <span className="sm:hidden">Notify</span>
+            <span className="hidden sm:inline">Notifications</span>
           </TabsTrigger>
-          <TabsTrigger value={2}>
+          <TabsTrigger value={2} className="snap-start shrink-0">
             <Send className="size-4" />
             Telegram
           </TabsTrigger>
-          <TabsTrigger value={3}>
+          <TabsTrigger value={3} className="snap-start shrink-0">
             <List className="size-4" />
-            Event Types
+            <span className="sm:hidden">Events</span>
+            <span className="hidden sm:inline">Event Types</span>
           </TabsTrigger>
-          <TabsTrigger value={4}>
+          <TabsTrigger value={4} className="snap-start shrink-0">
             <Gauge className="size-4" />
-            Alert Thresholds
+            <span className="sm:hidden">Alerts</span>
+            <span className="hidden sm:inline">Alert Thresholds</span>
           </TabsTrigger>
         </TabsList>
 

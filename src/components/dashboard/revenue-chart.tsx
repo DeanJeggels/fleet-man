@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   BarChart,
   Bar,
@@ -58,6 +59,7 @@ function CustomTooltip({
 export function RevenueChart() {
   const [data, setData] = useState<MonthData[]>([]);
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     async function fetchData() {
@@ -120,12 +122,12 @@ export function RevenueChart() {
       <h3 className="mb-4 text-sm font-medium text-muted-foreground">
         Revenue vs Maintenance (6 months)
       </h3>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={isMobile ? 220 : 300}>
         <BarChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
           <XAxis
             dataKey="month"
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: isMobile ? 10 : 12 }}
             className="text-muted-foreground"
           />
           <YAxis

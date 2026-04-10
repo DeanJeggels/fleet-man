@@ -19,6 +19,7 @@ export interface LineItem {
   item_type: LineItemType
   quantity: number
   unit_cost: number
+  normalised_name: string | null
 }
 
 interface LineItemsEditorProps {
@@ -55,6 +56,7 @@ export function LineItemsEditor({ items, onChange }: LineItemsEditorProps) {
         item_type: "parts",
         quantity: 1,
         unit_cost: 0,
+        normalised_name: null,
       },
     ])
   }
@@ -99,14 +101,21 @@ export function LineItemsEditor({ items, onChange }: LineItemsEditorProps) {
               key={item.id}
               className="grid grid-cols-1 sm:grid-cols-[1fr_120px_70px_90px_32px] gap-2 items-start rounded-md border p-2 sm:border-0 sm:p-0"
             >
-              <Input
-                placeholder="Description"
-                aria-label="Line item description"
-                value={item.description}
-                onChange={(e) =>
-                  updateItem(item.id, "description", e.target.value)
-                }
-              />
+              <div className="space-y-1">
+                <Input
+                  placeholder="Description"
+                  aria-label="Line item description"
+                  value={item.description}
+                  onChange={(e) =>
+                    updateItem(item.id, "description", e.target.value)
+                  }
+                />
+                {item.normalised_name && (
+                  <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded inline-block" title="Normalised name for cross-supplier comparison">
+                    {item.normalised_name}
+                  </span>
+                )}
+              </div>
               <Select
                 value={item.item_type}
                 onValueChange={(val) => {
@@ -126,6 +135,7 @@ export function LineItemsEditor({ items, onChange }: LineItemsEditorProps) {
               </Select>
               <Input
                 type="number"
+                inputMode="numeric"
                 min={0}
                 step={1}
                 aria-label="Quantity"
@@ -140,6 +150,7 @@ export function LineItemsEditor({ items, onChange }: LineItemsEditorProps) {
               />
               <Input
                 type="number"
+                inputMode="decimal"
                 min={0}
                 step={0.01}
                 aria-label="Unit cost"

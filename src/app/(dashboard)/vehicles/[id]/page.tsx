@@ -82,13 +82,22 @@ export default function VehicleDetailPage({
       <VehicleHeader vehicle={vehicle} currentDriverName={currentDriverName} />
 
       <Tabs defaultValue="overview">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-          <TabsTrigger value="trips">Trips</TabsTrigger>
-          <TabsTrigger value="fuel">Fuel</TabsTrigger>
-          <TabsTrigger value="odometer">Odometer</TabsTrigger>
-          <TabsTrigger value="drivers">Driver History</TabsTrigger>
+        <TabsList className="overflow-x-auto scrollbar-none scroll-smooth snap-x snap-mandatory">
+          <TabsTrigger value="overview" className="snap-start shrink-0">Overview</TabsTrigger>
+          <TabsTrigger value="maintenance" className="snap-start shrink-0">
+            <span className="sm:hidden">Maint.</span>
+            <span className="hidden sm:inline">Maintenance</span>
+          </TabsTrigger>
+          <TabsTrigger value="trips" className="snap-start shrink-0">Trips</TabsTrigger>
+          <TabsTrigger value="fuel" className="snap-start shrink-0">Fuel</TabsTrigger>
+          <TabsTrigger value="odometer" className="snap-start shrink-0">
+            <span className="sm:hidden">Odo.</span>
+            <span className="hidden sm:inline">Odometer</span>
+          </TabsTrigger>
+          <TabsTrigger value="drivers" className="snap-start shrink-0">
+            <span className="sm:hidden">Drivers</span>
+            <span className="hidden sm:inline">Driver History</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
