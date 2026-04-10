@@ -104,10 +104,15 @@ export function VehicleFormSheet({
     setSaving(true);
     const supabase = createClient();
 
+    // Trim and cap name fields
+    const trimmedRegistration = registration.trim().slice(0, 200);
+    const trimmedMake = make.trim().slice(0, 200);
+    const trimmedModel = model.trim().slice(0, 200);
+
     const payload = {
-      registration: registration.trim(),
-      make: make.trim(),
-      model: model.trim(),
+      registration: trimmedRegistration,
+      make: trimmedMake,
+      model: trimmedModel,
       year: year ? Number(year) : null,
       vin: vin.trim() || null,
       vehicle_type: vehicleType.trim() || null,
@@ -121,10 +126,12 @@ export function VehicleFormSheet({
       const { error } = await supabase
         .from("vehicles")
         .update(payload)
-        .eq("id", vehicle.id);
+        .eq("id", vehicle.id)
+        .eq("fleet_id", fleetId!);
 
       if (error) {
-        toast.error("Failed to update vehicle", { description: error.message });
+        console.error(error);
+        toast.error("Something went wrong. Please try again.");
         setSaving(false);
         return;
       }
@@ -133,7 +140,8 @@ export function VehicleFormSheet({
       const { error } = await supabase.from("vehicles").insert({ ...payload, fleet_id: fleetId! });
 
       if (error) {
-        toast.error("Failed to add vehicle", { description: error.message });
+        console.error(error);
+        toast.error("Something went wrong. Please try again.");
         setSaving(false);
         return;
       }

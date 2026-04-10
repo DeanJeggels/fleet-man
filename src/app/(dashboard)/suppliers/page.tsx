@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, ShieldOff } from "lucide-react";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useFleet } from "@/contexts/fleet-context";
 import type { Database } from "@/types/database";
@@ -18,37 +19,82 @@ const formatZAR = new Intl.NumberFormat("en-ZA", {
   currency: "ZAR",
 });
 
-const columns: ColumnDef<Supplier>[] = [
-  { key: "name", header: "Name", sortable: true },
-  { key: "phone", header: "Phone" },
-  { key: "location", header: "Location" },
-  {
-    key: "total_spend",
-    header: "Total Spend",
-    sortable: true,
-    render: (row) => (
-      <span className="font-mono">{formatZAR.format(row.total_spend)}</span>
-    ),
-  },
-  {
-    key: "event_count",
-    header: "Events",
-    sortable: true,
-    render: (row) => row.event_count,
-  },
-];
-
 export default function SuppliersPage() {
   const router = useRouter();
   const { fleetId } = useFleet();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const supabase = createClient();
+
+  async function handleAnonymise(supplierId: string) {
+    if (!window.confirm("Are you sure you want to anonymise this supplier's data? This action cannot be undone.")) return;
+    const { error } = await supabase
+      .from("suppliers")
+      .update({
+        name: "Removed Supplier",
+        email: "",
+        phone: "",
+        location: "",
+        notes: "",
+        anonymised_at: new Date().toISOString(),
+      })
+      .eq("id", supplierId)
+      .eq("fleet_id", fleetId!);
+    if (error) {
+      console.error(error);
+      toast.error("Failed to anonymise supplier data.");
+      return;
+    }
+    toast.success("Supplier data anonymised per POPI request.");
+    fetchSuppliers();
+  }
+
+  const columns: ColumnDef<Supplier>[] = useMemo(
+    () => [
+      { key: "name", header: "Name", sortable: true },
+      { key: "phone", header: "Phone" },
+      { key: "location", header: "Location" },
+      {
+        key: "total_spend",
+        header: "Total Spend",
+        sortable: true,
+        render: (row) => (
+          <span className="font-mono">{formatZAR.format(row.total_spend)}</span>
+        ),
+      },
+      {
+        key: "event_count",
+        header: "Events",
+        sortable: true,
+        render: (row) => row.event_count,
+      },
+      {
+        key: "actions",
+        header: "",
+        render: (row) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:text-destructive cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAnonymise(row.id as string);
+            }}
+          >
+            <ShieldOff className="mr-1.5 h-4 w-4" />
+            Anonymise
+          </Button>
+        ),
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fleetId]
+  );
 
   const fetchSuppliers = useCallback(async () => {
     if (!fleetId) return;
     setLoading(true);
-    const supabase = createClient();
     const { data } = await supabase
       .from("suppliers")
       .select("*")

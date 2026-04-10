@@ -164,6 +164,7 @@ export function ServiceScheduleCard({
         .from("service_schedules")
         .update(payload)
         .eq("id", schedule.id)
+        .eq("fleet_id", fleetId!)
         .select("*")
         .single()
     } else {
@@ -177,7 +178,8 @@ export function ServiceScheduleCard({
     setSaving(false)
 
     if (result.error) {
-      toast.error(result.error.message)
+      console.error(result.error)
+      toast.error("Something went wrong. Please try again.")
       return
     }
 

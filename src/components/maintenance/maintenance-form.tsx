@@ -199,7 +199,8 @@ export function MaintenanceForm() {
 
       toast.success(`Vehicle ${data.registration} added to fleet.`)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to add vehicle.")
+      console.error(err)
+      toast.error("Something went wrong. Please try again.")
     } finally {
       setAddingVehicle(false)
     }
@@ -244,7 +245,8 @@ export function MaintenanceForm() {
 
       toast.success(`Supplier "${data.name}" created.`)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to add supplier.")
+      console.error(err)
+      toast.error("Something went wrong. Please try again.")
     } finally {
       setAddingSupplier(false)
     }
@@ -401,6 +403,19 @@ export function MaintenanceForm() {
       return
     }
 
+    // Trim text fields
+    const trimmedDescription = description.trim().slice(0, 1000)
+    const trimmedNotes = notes.trim().slice(0, 1000)
+
+    // Validate odometer
+    if (odometer) {
+      const odoNum = Number(odometer)
+      if (!isFinite(odoNum) || odoNum < 0) {
+        toast.error("Odometer reading must be a valid non-negative number.")
+        return
+      }
+    }
+
     setSaving(true)
 
     try {
@@ -425,8 +440,8 @@ export function MaintenanceForm() {
         category,
         event_date: eventDate.toISOString().split("T")[0],
         odometer_reading: odometer ? Number(odometer) : null,
-        description: description || null,
-        notes: notes || null,
+        description: trimmedDescription || null,
+        notes: trimmedNotes || null,
         invoice_file_url: invoiceUrl,
         invoice_parsed_by_ai: parsedInvoice !== null,
         cost_parts: costParts,
@@ -468,9 +483,8 @@ export function MaintenanceForm() {
       toast.success("Maintenance event logged successfully.")
       router.push(`/vehicles/${vehicleId}`)
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to save maintenance event."
-      )
+      console.error(err)
+      toast.error("Something went wrong. Please try again.")
     } finally {
       setSaving(false)
     }

@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          fleet_id: string | null
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string | null
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          fleet_id?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          fleet_id?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       billboard_signals: {
         Row: {
           company_name: string | null
@@ -214,6 +258,8 @@ export type Database = {
       }
       drivers: {
         Row: {
+          anonymised_at: string | null
+          consented_at: string | null
           created_at: string
           email: string | null
           first_name: string
@@ -229,6 +275,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          anonymised_at?: string | null
+          consented_at?: string | null
           created_at?: string
           email?: string | null
           first_name: string
@@ -244,6 +292,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          anonymised_at?: string | null
+          consented_at?: string | null
           created_at?: string
           email?: string | null
           first_name?: string
@@ -378,6 +428,62 @@ export type Database = {
           utm_source?: string | null
         }
         Relationships: []
+      }
+      fleet_settings: {
+        Row: {
+          alert_days_threshold: number
+          alert_km_threshold: number
+          created_at: string
+          fleet_id: string
+          id: string
+          notification_email: boolean
+          notification_in_app: boolean
+          notification_telegram: boolean
+          telegram_chat_id: string | null
+          uber_client_id: string | null
+          uber_client_secret: string | null
+          uber_org_uuid: string | null
+          updated_at: string
+        }
+        Insert: {
+          alert_days_threshold?: number
+          alert_km_threshold?: number
+          created_at?: string
+          fleet_id: string
+          id?: string
+          notification_email?: boolean
+          notification_in_app?: boolean
+          notification_telegram?: boolean
+          telegram_chat_id?: string | null
+          uber_client_id?: string | null
+          uber_client_secret?: string | null
+          uber_org_uuid?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alert_days_threshold?: number
+          alert_km_threshold?: number
+          created_at?: string
+          fleet_id?: string
+          id?: string
+          notification_email?: boolean
+          notification_in_app?: boolean
+          notification_telegram?: boolean
+          telegram_chat_id?: string | null
+          uber_client_id?: string | null
+          uber_client_secret?: string | null
+          uber_org_uuid?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fleet_settings_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: true
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fleets: {
         Row: {
@@ -1269,6 +1375,8 @@ export type Database = {
       }
       suppliers: {
         Row: {
+          anonymised_at: string | null
+          consented_at: string | null
           created_at: string
           email: string | null
           event_count: number
@@ -1282,6 +1390,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          anonymised_at?: string | null
+          consented_at?: string | null
           created_at?: string
           email?: string | null
           event_count?: number
@@ -1295,6 +1405,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          anonymised_at?: string | null
+          consented_at?: string | null
           created_at?: string
           email?: string | null
           event_count?: number
@@ -1949,9 +2061,11 @@ export interface ParsedInvoice {
   confidence: number
 }
 
-// Convenience types for fleet tables
+// Convenience types
 export type Fleet = Tables<"fleets">;
 export type ProfileFleet = Tables<"profiles_fleet">;
+export type FleetSettings = Tables<"fleet_settings">;
+export type AuditLog = Tables<"audit_logs">;
 export type Vehicle = Tables<"vehicles">;
 export type Driver = Tables<"drivers">;
 export type VehicleDriverAssignment = Tables<"vehicle_driver_assignments">;

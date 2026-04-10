@@ -95,6 +95,27 @@ export function BatchFuelForm({ vehicles, onSaved }: BatchFuelFormProps) {
       }
     }
 
+    // Validate numeric fields on filled rows
+    for (const row of filledRows) {
+      const litres = parseFloat(row.litres);
+      const costPerLitre = parseFloat(row.cost_per_litre);
+      if (!isFinite(litres) || litres < 0) {
+        toast.error(`${row.registration}: Litres must be a valid non-negative number.`);
+        return;
+      }
+      if (!isFinite(costPerLitre) || costPerLitre < 0) {
+        toast.error(`${row.registration}: Cost/L must be a valid non-negative number.`);
+        return;
+      }
+      if (row.odometer) {
+        const odo = parseFloat(row.odometer);
+        if (!isFinite(odo) || odo < 0) {
+          toast.error(`${row.registration}: Odometer must be a valid non-negative number.`);
+          return;
+        }
+      }
+    }
+
     setSaving(true);
     const supabase = createClient();
 
@@ -112,7 +133,8 @@ export function BatchFuelForm({ vehicles, onSaved }: BatchFuelFormProps) {
     setSaving(false);
 
     if (error) {
-      toast.error("Failed to save fuel entries: " + error.message);
+      console.error(error);
+      toast.error("Something went wrong. Please try again.");
       return;
     }
 

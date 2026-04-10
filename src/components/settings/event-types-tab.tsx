@@ -109,7 +109,8 @@ export function EventTypesTab() {
       const { error } = await supabase
         .from("maintenance_event_types")
         .update({ name: form.name, category: form.category })
-        .eq("id", editingId);
+        .eq("id", editingId)
+        .eq("fleet_id", fleetId!);
 
       if (error) {
         toast.error("Failed to update event type");
@@ -141,7 +142,8 @@ export function EventTypesTab() {
     const { error } = await supabase
       .from("maintenance_event_types")
       .delete()
-      .eq("id", row.id);
+      .eq("id", row.id)
+      .eq("fleet_id", fleetId!);
 
     if (error) {
       toast.error("Failed to delete event type");

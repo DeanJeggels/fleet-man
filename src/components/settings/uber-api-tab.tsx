@@ -6,45 +6,69 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
-const STORAGE_KEY = "fleet_uber_api_settings";
+import { useFleet } from "@/contexts/fleet-context";
+import { createClient } from "@/lib/supabase/client";
 
 interface UberApiSettings {
-  organisationUuid: string;
-  clientId: string;
-  clientSecret: string;
+  uber_org_uuid: string;
+  uber_client_id: string;
+  uber_client_secret: string;
 }
 
 export function UberApiTab() {
+  const { fleetId } = useFleet();
   const [settings, setSettings] = useState<UberApiSettings>({
-    organisationUuid: "",
-    clientId: "",
-    clientSecret: "",
+    uber_org_uuid: "",
+    uber_client_id: "",
+    uber_client_secret: "",
   });
   const [connected, setConnected] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as UberApiSettings;
-        setSettings(parsed);
-        setConnected(
-          Boolean(parsed.organisationUuid && parsed.clientId && parsed.clientSecret)
-        );
-      } catch {
-        // ignore
-      }
-    }
-  }, []);
+    if (!fleetId) return;
 
-  function handleSave() {
+    async function load() {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("fleet_settings")
+        .select("*")
+        .eq("fleet_id", fleetId!)
+        .single();
+
+      if (error || !data) return;
+
+      setSettings({
+        uber_org_uuid: data.uber_org_uuid ?? "",
+        uber_client_id: data.uber_client_id ?? "",
+        uber_client_secret: data.uber_client_secret ?? "",
+      });
+      setConnected(
+        Boolean(data.uber_org_uuid && data.uber_client_id && data.uber_client_secret)
+      );
+    }
+
+    load();
+  }, [fleetId]);
+
+  async function handleSave() {
+    if (!fleetId) return;
     setSaving(true);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("fleet_settings")
+        .update({
+          uber_org_uuid: settings.uber_org_uuid,
+          uber_client_id: settings.uber_client_id,
+          uber_client_secret: settings.uber_client_secret,
+        })
+        .eq("fleet_id", fleetId);
+
+      if (error) throw error;
+
       const isConnected = Boolean(
-        settings.organisationUuid && settings.clientId && settings.clientSecret
+        settings.uber_org_uuid && settings.uber_client_id && settings.uber_client_secret
       );
       setConnected(isConnected);
       toast.success("Uber API settings saved");
@@ -84,9 +108,9 @@ export function UberApiTab() {
             <Input
               id="org-uuid"
               placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-              value={settings.organisationUuid}
+              value={settings.uber_org_uuid}
               onChange={(e) =>
-                setSettings((s) => ({ ...s, organisationUuid: e.target.value }))
+                setSettings((s) => ({ ...s, uber_org_uuid: e.target.value }))
               }
             />
           </div>
@@ -95,9 +119,9 @@ export function UberApiTab() {
             <Input
               id="client-id"
               placeholder="Enter your Client ID"
-              value={settings.clientId}
+              value={settings.uber_client_id}
               onChange={(e) =>
-                setSettings((s) => ({ ...s, clientId: e.target.value }))
+                setSettings((s) => ({ ...s, uber_client_id: e.target.value }))
               }
             />
           </div>
@@ -107,9 +131,9 @@ export function UberApiTab() {
               id="client-secret"
               type="password"
               placeholder="Enter your Client Secret"
-              value={settings.clientSecret}
+              value={settings.uber_client_secret}
               onChange={(e) =>
-                setSettings((s) => ({ ...s, clientSecret: e.target.value }))
+                setSettings((s) => ({ ...s, uber_client_secret: e.target.value }))
               }
             />
           </div>
