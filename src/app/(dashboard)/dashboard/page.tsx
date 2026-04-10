@@ -8,7 +8,7 @@ import { KPICard } from "@/components/shared/kpi-card";
 import { PageHeader } from "@/components/shared/page-header";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { CategoryDonut } from "@/components/dashboard/category-donut";
-import { ActivityFeed } from "@/components/dashboard/activity-feed";
+import { RecentMaintenance } from "@/components/dashboard/recent-maintenance";
 import { UpcomingServices } from "@/components/dashboard/upcoming-services";
 
 const zarFormat = new Intl.NumberFormat("en-ZA", {
@@ -130,7 +130,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <ActivityFeed />
+        <RecentMaintenance />
         <UpcomingServices />
       </div>
     </div>

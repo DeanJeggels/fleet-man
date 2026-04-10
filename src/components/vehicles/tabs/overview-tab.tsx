@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { Wrench, Fuel, DollarSign, MapPin } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { ServiceScheduleCard } from "@/components/vehicles/service-schedule-card";
 import type { Tables } from "@/types/database";
 
 const formatZAR = new Intl.NumberFormat("en-ZA", {
@@ -107,6 +108,11 @@ export function OverviewTab({ vehicle }: OverviewTabProps) {
           color="accent"
         />
       </div>
+
+      <ServiceScheduleCard
+        vehicleId={vehicle.id}
+        currentOdometer={vehicle.current_odometer}
+      />
 
       <div className="rounded-lg border p-4">
         <h3 className="mb-4 text-sm font-medium">Monthly Costs</h3>
