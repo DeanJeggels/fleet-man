@@ -40,9 +40,16 @@ function generateId() {
 
 export function LineItemsEditor({ items, onChange }: LineItemsEditorProps) {
   function updateItem(id: string, field: keyof LineItem, value: string | number) {
+    let sanitised = value
+    if (field === "description" && typeof value === "string") {
+      sanitised = value.trim().slice(0, 200)
+    }
+    if ((field === "quantity" || field === "unit_cost") && typeof value === "number") {
+      if (!isFinite(value) || value < 0) sanitised = 0
+    }
     onChange(
       items.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item
+        item.id === id ? { ...item, [field]: sanitised } : item
       )
     )
   }

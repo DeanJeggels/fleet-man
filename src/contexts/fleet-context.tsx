@@ -52,6 +52,14 @@ export function FleetProvider({ children }: { children: ReactNode }) {
     loadProfile()
   }, [])
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+        Loading fleet...
+      </div>
+    )
+  }
+
   return (
     <FleetContext.Provider value={{ fleetId, role, displayName, loading }}>
       {children}

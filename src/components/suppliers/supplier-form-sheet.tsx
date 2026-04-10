@@ -34,7 +34,9 @@ export function SupplierFormSheet({
   onSaved,
 }: SupplierFormSheetProps) {
   const { fleetId } = useFleet();
+  const isEdit = !!supplier;
   const [saving, setSaving] = useState(false);
+  const [consented, setConsented] = useState(false);
   const [name, setName] = useState(supplier?.name ?? "");
   const [phone, setPhone] = useState(supplier?.phone ?? "");
   const [email, setEmail] = useState(supplier?.email ?? "");
@@ -49,6 +51,7 @@ export function SupplierFormSheet({
       setEmail(supplier?.email ?? "");
       setLocation(supplier?.location ?? "");
       setNotes(supplier?.notes ?? "");
+      setConsented(false);
     }
     onOpenChange(value);
   };
@@ -64,21 +67,22 @@ export function SupplierFormSheet({
     const supabase = createClient();
 
     const payload = {
-      name: name.trim(),
-      phone: phone.trim() || null,
-      email: email.trim() || null,
-      location: location.trim() || null,
-      notes: notes.trim() || null,
+      name: name.trim().slice(0, 200),
+      phone: phone.trim().slice(0, 200) || null,
+      email: email.trim().slice(0, 200) || null,
+      location: location.trim().slice(0, 200) || null,
+      notes: notes.trim().slice(0, 1000) || null,
     };
 
     const { error } = supplier
-      ? await supabase.from("suppliers").update(payload).eq("id", supplier.id)
-      : await supabase.from("suppliers").insert({ ...payload, fleet_id: fleetId! });
+      ? await supabase.from("suppliers").update(payload).eq("id", supplier.id).eq("fleet_id", fleetId!)
+      : await supabase.from("suppliers").insert({ ...payload, fleet_id: fleetId!, consented_at: new Date().toISOString() });
 
     setSaving(false);
 
     if (error) {
-      toast.error("Failed to save supplier", { description: error.message });
+      console.error(error);
+      toast.error("Something went wrong. Please try again.");
       return;
     }
 
@@ -153,8 +157,20 @@ export function SupplierFormSheet({
             />
           </div>
 
+          {!isEdit && (
+            <label className="flex items-start gap-2 cursor-pointer text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={consented}
+                onChange={(e) => setConsented(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 accent-primary"
+              />
+              I confirm consent has been obtained to store this supplier&apos;s contact information in accordance with POPI Act.
+            </label>
+          )}
+
           <SheetFooter>
-            <Button type="submit" disabled={saving} className="cursor-pointer">
+            <Button type="submit" disabled={saving || (!isEdit && !consented)} className="cursor-pointer">
               {saving ? "Saving..." : "Save"}
             </Button>
           </SheetFooter>

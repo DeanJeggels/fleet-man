@@ -59,6 +59,7 @@ export function DriverFormSheet({
   const isEdit = !!driver;
 
   const [saving, setSaving] = useState(false);
+  const [consented, setConsented] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [licenseNumber, setLicenseNumber] = useState("");
@@ -93,6 +94,7 @@ export function DriverFormSheet({
       setStatus("active");
       setUberDriverId("");
       setNotes("");
+      setConsented(false);
     }
   }, [driver, open]);
 
@@ -104,13 +106,20 @@ export function DriverFormSheet({
 
     setSaving(true);
 
+    // Trim text fields before save
+    const trimmedFirstName = firstName.trim().slice(0, 200);
+    const trimmedLastName = lastName.trim().slice(0, 200);
+    const trimmedLicense = licenseNumber.trim().slice(0, 200);
+    const trimmedEmail = email.trim().slice(0, 200);
+    const trimmedPhone = phone.trim().slice(0, 200);
+
     const payload = {
-      first_name: firstName,
-      last_name: lastName,
-      license_number: licenseNumber,
+      first_name: trimmedFirstName,
+      last_name: trimmedLastName,
+      license_number: trimmedLicense,
       license_expiry: format(licenseExpiry, "yyyy-MM-dd"),
-      email: email || null,
-      phone: phone || null,
+      email: trimmedEmail || null,
+      phone: trimmedPhone || null,
       status,
       uber_driver_id: uberDriverId || null,
       notes: notes || null,
@@ -121,15 +130,17 @@ export function DriverFormSheet({
       ({ error } = await supabase
         .from("drivers")
         .update(payload)
-        .eq("id", driver.id));
+        .eq("id", driver.id)
+        .eq("fleet_id", fleetId!));
     } else {
-      ({ error } = await supabase.from("drivers").insert({ ...payload, fleet_id: fleetId! }));
+      ({ error } = await supabase.from("drivers").insert({ ...payload, fleet_id: fleetId!, consented_at: new Date().toISOString() }));
     }
 
     setSaving(false);
 
     if (error) {
-      toast.error(error.message);
+      console.error(error);
+      toast.error("Something went wrong. Please try again.");
       return;
     }
 
@@ -270,6 +281,18 @@ export function DriverFormSheet({
               rows={3}
             />
           </div>
+
+          {!isEdit && (
+            <label className="flex items-start gap-2 cursor-pointer text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={consented}
+                onChange={(e) => setConsented(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 accent-primary"
+              />
+              I confirm consent has been obtained to store this driver&apos;s personal information in accordance with POPI Act.
+            </label>
+          )}
         </div>
 
         <SheetFooter>
@@ -281,7 +304,7 @@ export function DriverFormSheet({
           >
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={saving} className="cursor-pointer">
+          <Button onClick={handleSave} disabled={saving || (!isEdit && !consented)} className="cursor-pointer">
             {saving ? "Saving..." : isEdit ? "Update Driver" : "Add Driver"}
           </Button>
         </SheetFooter>

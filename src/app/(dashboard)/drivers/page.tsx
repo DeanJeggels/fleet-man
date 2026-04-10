@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useFleet } from "@/contexts/fleet-context";
 import { differenceInDays, parseISO } from "date-fns";
-import { Plus } from "lucide-react";
+import { Plus, ShieldOff } from "lucide-react";
+import { toast } from "sonner";
 import type { Driver } from "@/types/database";
 
 import { DataTable, type ColumnDef } from "@/components/shared/data-table";
@@ -91,6 +92,31 @@ export default function DriversPage() {
     setSheetOpen(true);
   }
 
+  async function handleAnonymise(driverId: string) {
+    if (!window.confirm("Are you sure you want to anonymise this driver's data? This action cannot be undone.")) return;
+    const { error } = await supabase
+      .from("drivers")
+      .update({
+        first_name: "Removed",
+        last_name: "Removed",
+        license_number: "REDACTED",
+        email: "",
+        phone: "",
+        notes: "",
+        status: "inactive" as const,
+        anonymised_at: new Date().toISOString(),
+      })
+      .eq("id", driverId)
+      .eq("fleet_id", fleetId!);
+    if (error) {
+      console.error(error);
+      toast.error("Failed to anonymise driver data.");
+      return;
+    }
+    toast.success("Driver data anonymised per POPI request.");
+    fetchDrivers();
+  }
+
   const columns: ColumnDef<DriverWithAssignment>[] = useMemo(
     () => [
       {
@@ -141,8 +167,27 @@ export default function DriversPage() {
             <span className="text-muted-foreground">-</span>
           ),
       },
+      {
+        key: "actions",
+        header: "",
+        render: (row) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:text-destructive cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAnonymise(row.id as string);
+            }}
+          >
+            <ShieldOff className="mr-1.5 h-4 w-4" />
+            Anonymise
+          </Button>
+        ),
+      },
     ],
-    []
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fleetId]
   );
 
   return (

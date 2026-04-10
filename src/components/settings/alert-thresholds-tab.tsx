@@ -6,38 +6,61 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
-const STORAGE_KEY = "fleet_alert_thresholds";
+import { useFleet } from "@/contexts/fleet-context";
+import { createClient } from "@/lib/supabase/client";
 
 interface AlertThresholds {
-  alertKmThreshold: number;
-  alertDaysThreshold: number;
+  alert_km_threshold: number;
+  alert_days_threshold: number;
 }
 
 const DEFAULTS: AlertThresholds = {
-  alertKmThreshold: 1200,
-  alertDaysThreshold: 14,
+  alert_km_threshold: 1200,
+  alert_days_threshold: 14,
 };
 
 export function AlertThresholdsTab() {
+  const { fleetId } = useFleet();
   const [thresholds, setThresholds] = useState<AlertThresholds>(DEFAULTS);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setThresholds({ ...DEFAULTS, ...JSON.parse(stored) });
-      } catch {
-        // ignore
-      }
-    }
-  }, []);
+    if (!fleetId) return;
 
-  function handleSave() {
+    async function load() {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("fleet_settings")
+        .select("*")
+        .eq("fleet_id", fleetId!)
+        .single();
+
+      if (error || !data) return;
+
+      setThresholds({
+        alert_km_threshold: data.alert_km_threshold ?? 1200,
+        alert_days_threshold: data.alert_days_threshold ?? 14,
+      });
+    }
+
+    load();
+  }, [fleetId]);
+
+  async function handleSave() {
+    if (!fleetId) return;
     setSaving(true);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(thresholds));
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("fleet_settings")
+        .update({
+          alert_km_threshold: thresholds.alert_km_threshold,
+          alert_days_threshold: thresholds.alert_days_threshold,
+        })
+        .eq("fleet_id", fleetId);
+
+      if (error) throw error;
+
       toast.success("Alert thresholds saved");
     } catch {
       toast.error("Failed to save thresholds");
@@ -63,11 +86,11 @@ export function AlertThresholdsTab() {
               id="km-threshold"
               type="number"
               min={0}
-              value={thresholds.alertKmThreshold}
+              value={thresholds.alert_km_threshold}
               onChange={(e) =>
                 setThresholds((t) => ({
                   ...t,
-                  alertKmThreshold: Number(e.target.value) || 0,
+                  alert_km_threshold: Number(e.target.value) || 0,
                 }))
               }
             />
@@ -82,11 +105,11 @@ export function AlertThresholdsTab() {
               id="days-threshold"
               type="number"
               min={0}
-              value={thresholds.alertDaysThreshold}
+              value={thresholds.alert_days_threshold}
               onChange={(e) =>
                 setThresholds((t) => ({
                   ...t,
-                  alertDaysThreshold: Number(e.target.value) || 0,
+                  alert_days_threshold: Number(e.target.value) || 0,
                 }))
               }
             />

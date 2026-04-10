@@ -9,32 +9,47 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
-const STORAGE_KEY = "fleet_telegram_settings";
+import { useFleet } from "@/contexts/fleet-context";
 
 export function TelegramTab() {
+  const { fleetId } = useFleet();
   const [chatId, setChatId] = useState("");
   const [connected, setConnected] = useState(false);
   const [sending, setSending] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setChatId(parsed.chatId || "");
-        setConnected(Boolean(parsed.chatId));
-      } catch {
-        // ignore
-      }
-    }
-  }, []);
+    if (!fleetId) return;
 
-  function handleSave() {
+    async function load() {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("fleet_settings")
+        .select("*")
+        .eq("fleet_id", fleetId!)
+        .single();
+
+      if (error || !data) return;
+
+      setChatId(data.telegram_chat_id ?? "");
+      setConnected(Boolean(data.telegram_chat_id));
+    }
+
+    load();
+  }, [fleetId]);
+
+  async function handleSave() {
+    if (!fleetId) return;
     setSaving(true);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ chatId }));
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("fleet_settings")
+        .update({ telegram_chat_id: chatId })
+        .eq("fleet_id", fleetId);
+
+      if (error) throw error;
+
       setConnected(Boolean(chatId));
       toast.success("Telegram settings saved");
     } catch {
