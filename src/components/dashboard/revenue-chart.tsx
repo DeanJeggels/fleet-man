@@ -16,6 +16,7 @@ import { format, subMonths, startOfMonth } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase/client";
+import { useFleet } from "@/contexts/fleet-context";
 
 interface MonthData {
   month: string;
@@ -57,11 +58,13 @@ function CustomTooltip({
 }
 
 export function RevenueChart() {
+  const { fleetId } = useFleet();
   const [data, setData] = useState<MonthData[]>([]);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
 
   useEffect(() => {
+    if (!fleetId) return;
     async function fetchData() {
       const supabase = createClient();
       const now = new Date();
@@ -72,10 +75,12 @@ export function RevenueChart() {
         supabase
           .from("uber_trip_data")
           .select("period_date, total_earnings")
+          .eq("fleet_id", fleetId!)
           .gte("period_date", sixMonthsAgoStr),
         supabase
           .from("maintenance_events")
           .select("event_date, cost_total")
+          .eq("fleet_id", fleetId!)
           .gte("event_date", sixMonthsAgoStr),
       ]);
 
@@ -106,7 +111,7 @@ export function RevenueChart() {
       setLoading(false);
     }
     fetchData();
-  }, []);
+  }, [fleetId]);
 
   if (loading) {
     return (

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Bell } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
+import { useFleet } from "@/contexts/fleet-context";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -21,14 +22,17 @@ const typeColors: Record<string, string> = {
 };
 
 export function NotificationBell() {
+  const { fleetId } = useFleet();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const supabase = createClient();
 
   const fetchNotifications = useCallback(async () => {
+    if (!fleetId) return;
     const { data } = await supabase
       .from("notifications")
       .select("*")
+      .eq("fleet_id", fleetId!)
       .order("created_at", { ascending: false })
       .limit(10);
 
@@ -36,7 +40,7 @@ export function NotificationBell() {
       setNotifications(data);
       setUnreadCount(data.filter((n) => !n.is_read).length);
     }
-  }, [supabase]);
+  }, [supabase, fleetId]);
 
   useEffect(() => {
     fetchNotifications();
@@ -56,9 +60,11 @@ export function NotificationBell() {
   }, [fetchNotifications, supabase]);
 
   async function markAllRead() {
+    if (!fleetId) return;
     await supabase
       .from("notifications")
       .update({ is_read: true })
+      .eq("fleet_id", fleetId!)
       .eq("is_read", false);
     fetchNotifications();
   }

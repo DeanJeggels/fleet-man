@@ -217,6 +217,7 @@ export type Database = {
           created_at: string
           email: string | null
           first_name: string
+          fleet_id: string
           id: string
           last_name: string
           license_expiry: string
@@ -231,6 +232,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           first_name: string
+          fleet_id: string
           id?: string
           last_name: string
           license_expiry: string
@@ -245,6 +247,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           first_name?: string
+          fleet_id?: string
           id?: string
           last_name?: string
           license_expiry?: string
@@ -255,7 +258,15 @@ export type Database = {
           uber_driver_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "drivers_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ebook_purchases: {
         Row: {
@@ -368,11 +379,36 @@ export type Database = {
         }
         Relationships: []
       }
+      fleets: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fuel_logs: {
         Row: {
           cost: number
           created_at: string
           currency: Database["public"]["Enums"]["currency_code"]
+          fleet_id: string
           id: string
           litres: number | null
           notes: string | null
@@ -384,6 +420,7 @@ export type Database = {
           cost: number
           created_at?: string
           currency?: Database["public"]["Enums"]["currency_code"]
+          fleet_id: string
           id?: string
           litres?: number | null
           notes?: string | null
@@ -395,6 +432,7 @@ export type Database = {
           cost?: number
           created_at?: string
           currency?: Database["public"]["Enums"]["currency_code"]
+          fleet_id?: string
           id?: string
           litres?: number | null
           notes?: string | null
@@ -403,6 +441,13 @@ export type Database = {
           week_starting?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fuel_logs_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fuel_logs_vehicle_id_fkey"
             columns: ["vehicle_id"]
@@ -491,6 +536,7 @@ export type Database = {
         Row: {
           category: Database["public"]["Enums"]["maintenance_category"]
           created_at: string
+          fleet_id: string | null
           id: string
           is_system: boolean
           name: string
@@ -499,6 +545,7 @@ export type Database = {
         Insert: {
           category?: Database["public"]["Enums"]["maintenance_category"]
           created_at?: string
+          fleet_id?: string | null
           id?: string
           is_system?: boolean
           name: string
@@ -507,12 +554,21 @@ export type Database = {
         Update: {
           category?: Database["public"]["Enums"]["maintenance_category"]
           created_at?: string
+          fleet_id?: string | null
           id?: string
           is_system?: boolean
           name?: string
           sort_order?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_event_types_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       maintenance_events: {
         Row: {
@@ -526,6 +582,7 @@ export type Database = {
           description: string | null
           event_date: string
           event_type_id: string | null
+          fleet_id: string
           id: string
           invoice_file_url: string | null
           invoice_parsed_by_ai: boolean
@@ -548,6 +605,7 @@ export type Database = {
           description?: string | null
           event_date?: string
           event_type_id?: string | null
+          fleet_id: string
           id?: string
           invoice_file_url?: string | null
           invoice_parsed_by_ai?: boolean
@@ -570,6 +628,7 @@ export type Database = {
           description?: string | null
           event_date?: string
           event_type_id?: string | null
+          fleet_id?: string
           id?: string
           invoice_file_url?: string | null
           invoice_parsed_by_ai?: boolean
@@ -587,6 +646,13 @@ export type Database = {
             columns: ["event_type_id"]
             isOneToOne: false
             referencedRelation: "maintenance_event_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_events_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
             referencedColumns: ["id"]
           },
           {
@@ -609,6 +675,7 @@ export type Database = {
         Row: {
           created_at: string
           description: string
+          fleet_id: string
           id: string
           item_type: Database["public"]["Enums"]["line_item_type"]
           line_total: number | null
@@ -621,6 +688,7 @@ export type Database = {
         Insert: {
           created_at?: string
           description: string
+          fleet_id: string
           id?: string
           item_type?: Database["public"]["Enums"]["line_item_type"]
           line_total?: number | null
@@ -633,6 +701,7 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string
+          fleet_id?: string
           id?: string
           item_type?: Database["public"]["Enums"]["line_item_type"]
           line_total?: number | null
@@ -643,6 +712,13 @@ export type Database = {
           unit_cost?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "maintenance_line_items_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "maintenance_line_items_maintenance_event_id_fkey"
             columns: ["maintenance_event_id"]
@@ -691,10 +767,29 @@ export type Database = {
         }
         Relationships: []
       }
+      n8n_chat_histories: {
+        Row: {
+          id: number
+          message: Json
+          session_id: string
+        }
+        Insert: {
+          id?: number
+          message: Json
+          session_id: string
+        }
+        Update: {
+          id?: number
+          message?: Json
+          session_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
           driver_id: string | null
+          fleet_id: string
           id: string
           is_read: boolean
           message: string
@@ -704,6 +799,7 @@ export type Database = {
         Insert: {
           created_at?: string
           driver_id?: string | null
+          fleet_id: string
           id?: string
           is_read?: boolean
           message: string
@@ -713,6 +809,7 @@ export type Database = {
         Update: {
           created_at?: string
           driver_id?: string | null
+          fleet_id?: string
           id?: string
           is_read?: boolean
           message?: string
@@ -728,6 +825,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "notifications_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "notifications_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
@@ -739,6 +843,7 @@ export type Database = {
       odometer_readings: {
         Row: {
           created_at: string
+          fleet_id: string
           id: string
           notes: string | null
           reading: number
@@ -749,6 +854,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          fleet_id: string
           id?: string
           notes?: string | null
           reading: number
@@ -759,6 +865,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          fleet_id?: string
           id?: string
           notes?: string | null
           reading?: number
@@ -768,6 +875,13 @@ export type Database = {
           vehicle_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "odometer_readings_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "odometer_readings_vehicle_id_fkey"
             columns: ["vehicle_id"]
@@ -921,6 +1035,41 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles_fleet: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          fleet_id: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          fleet_id: string
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          fleet_id?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_fleet_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       record_manager: {
         Row: {
           created_at: string
@@ -1060,6 +1209,7 @@ export type Database = {
           alert_days_threshold: number
           alert_km_threshold: number
           created_at: string
+          fleet_id: string
           id: string
           interval_km: number | null
           interval_months: number | null
@@ -1074,6 +1224,7 @@ export type Database = {
           alert_days_threshold?: number
           alert_km_threshold?: number
           created_at?: string
+          fleet_id: string
           id?: string
           interval_km?: number | null
           interval_months?: number | null
@@ -1088,6 +1239,7 @@ export type Database = {
           alert_days_threshold?: number
           alert_km_threshold?: number
           created_at?: string
+          fleet_id?: string
           id?: string
           interval_km?: number | null
           interval_months?: number | null
@@ -1099,6 +1251,13 @@ export type Database = {
           vehicle_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "service_schedules_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "service_schedules_vehicle_id_fkey"
             columns: ["vehicle_id"]
@@ -1113,6 +1272,7 @@ export type Database = {
           created_at: string
           email: string | null
           event_count: number
+          fleet_id: string
           id: string
           location: string | null
           name: string
@@ -1125,6 +1285,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           event_count?: number
+          fleet_id: string
           id?: string
           location?: string | null
           name: string
@@ -1137,6 +1298,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           event_count?: number
+          fleet_id?: string
           id?: string
           location?: string | null
           name?: string
@@ -1145,7 +1307,15 @@ export type Database = {
           total_spend?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tabular_document_rows: {
         Row: {
@@ -1181,6 +1351,7 @@ export type Database = {
           created_at: string
           currency: Database["public"]["Enums"]["currency_code"]
           distance_km: number
+          fleet_id: string
           hours_on_trip: number
           hours_online: number
           id: string
@@ -1194,6 +1365,7 @@ export type Database = {
           created_at?: string
           currency?: Database["public"]["Enums"]["currency_code"]
           distance_km?: number
+          fleet_id: string
           hours_on_trip?: number
           hours_online?: number
           id?: string
@@ -1207,6 +1379,7 @@ export type Database = {
           created_at?: string
           currency?: Database["public"]["Enums"]["currency_code"]
           distance_km?: number
+          fleet_id?: string
           hours_on_trip?: number
           hours_online?: number
           id?: string
@@ -1217,6 +1390,13 @@ export type Database = {
           vehicle_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "uber_trip_data_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "uber_trip_data_vehicle_id_fkey"
             columns: ["vehicle_id"]
@@ -1231,6 +1411,7 @@ export type Database = {
           assigned_at: string
           created_at: string
           driver_id: string
+          fleet_id: string
           id: string
           notes: string | null
           unassigned_at: string | null
@@ -1240,6 +1421,7 @@ export type Database = {
           assigned_at?: string
           created_at?: string
           driver_id: string
+          fleet_id: string
           id?: string
           notes?: string | null
           unassigned_at?: string | null
@@ -1249,6 +1431,7 @@ export type Database = {
           assigned_at?: string
           created_at?: string
           driver_id?: string
+          fleet_id?: string
           id?: string
           notes?: string | null
           unassigned_at?: string | null
@@ -1260,6 +1443,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_driver_assignments_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
             referencedColumns: ["id"]
           },
           {
@@ -1279,6 +1469,7 @@ export type Database = {
           current_odometer: number
           date_added: string
           date_retired: string | null
+          fleet_id: string
           id: string
           make: string
           model: string
@@ -1305,6 +1496,7 @@ export type Database = {
           current_odometer?: number
           date_added?: string
           date_retired?: string | null
+          fleet_id: string
           id?: string
           make: string
           model: string
@@ -1331,6 +1523,7 @@ export type Database = {
           current_odometer?: number
           date_added?: string
           date_retired?: string | null
+          fleet_id?: string
           id?: string
           make?: string
           model?: string
@@ -1350,7 +1543,15 @@ export type Database = {
           vin?: string | null
           year?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       website_demo: {
         Row: {
@@ -1510,7 +1711,6 @@ export type Database = {
           isSetofReturn: true
         }
       }
-      is_fleet_user: { Args: never; Returns: boolean }
       keyword_search_pjd: {
         Args: { filter?: Json; match_count?: number; query_text: string }
         Returns: {
@@ -1531,6 +1731,7 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      user_fleet_ids: { Args: never; Returns: string[] }
     }
     Enums: {
       booking_status:
@@ -1749,6 +1950,8 @@ export interface ParsedInvoice {
 }
 
 // Convenience types for fleet tables
+export type Fleet = Tables<"fleets">;
+export type ProfileFleet = Tables<"profiles_fleet">;
 export type Vehicle = Tables<"vehicles">;
 export type Driver = Tables<"drivers">;
 export type VehicleDriverAssignment = Tables<"vehicle_driver_assignments">;
@@ -1770,3 +1973,4 @@ export type LineItemType = Database["public"]["Enums"]["line_item_type"];
 export type OdometerSource = Database["public"]["Enums"]["odometer_source"];
 export type NotificationType = Database["public"]["Enums"]["notification_type"];
 export type CurrencyCode = Database["public"]["Enums"]["currency_code"];
+

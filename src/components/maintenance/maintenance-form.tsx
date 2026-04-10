@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { useFleet } from "@/contexts/fleet-context"
 import { toast } from "sonner"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -68,6 +69,7 @@ interface AutoFillField {
 export function MaintenanceForm() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { fleetId } = useFleet()
   const preselectedVehicle = searchParams.get("vehicle")
 
   // Data for dropdowns
@@ -117,6 +119,7 @@ export function MaintenanceForm() {
 
   // Fetch dropdown data
   React.useEffect(() => {
+    if (!fleetId) return
     const supabase = createClient()
 
     async function load() {
@@ -124,9 +127,10 @@ export function MaintenanceForm() {
         supabase
           .from("vehicles")
           .select("*")
+          .eq("fleet_id", fleetId!)
           .eq("status", "active")
           .order("registration"),
-        supabase.from("suppliers").select("*").order("name"),
+        supabase.from("suppliers").select("*").eq("fleet_id", fleetId!).order("name"),
       ])
 
       if (vehicleRes.data) setVehicles(vehicleRes.data)
@@ -134,7 +138,7 @@ export function MaintenanceForm() {
     }
 
     load()
-  }, [])
+  }, [fleetId])
 
   // Match vehicle by registration number (fuzzy — strips spaces/dashes)
   function matchVehicle(registration: string): Vehicle | undefined {
@@ -169,6 +173,7 @@ export function MaintenanceForm() {
           make: newVehicleMake,
           model: newVehicleModel,
           year: newVehicleYear ? Number(newVehicleYear) : null,
+          fleet_id: fleetId!,
         })
         .select("*")
         .single()
@@ -214,6 +219,7 @@ export function MaintenanceForm() {
           name: newSupplierName,
           phone: newSupplierPhone || null,
           location: newSupplierLocation || null,
+          fleet_id: fleetId!,
         })
         .select("*")
         .single()
@@ -427,6 +433,7 @@ export function MaintenanceForm() {
         cost_labour: costLabour,
         cost_total: costTotal,
         ai_parse_confidence: parsedInvoice?.confidence ?? null,
+        fleet_id: fleetId!,
       }
 
       const { data: event, error: eventError } = await supabase
@@ -448,6 +455,7 @@ export function MaintenanceForm() {
             unit_cost: item.unit_cost,
             sort_order: index,
             normalised_name: item.normalised_name,
+            fleet_id: fleetId!,
           }))
 
         const { error: lineError } = await supabase

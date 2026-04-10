@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { format, parseISO } from "date-fns";
 import type { Tables } from "@/types/database";
+import { useFleet } from "@/contexts/fleet-context";
 
 type OdometerRow = Tables<"odometer_readings">;
 
@@ -29,23 +30,26 @@ interface OdometerTabProps {
 }
 
 export function OdometerTab({ vehicleId }: OdometerTabProps) {
+  const { fleetId } = useFleet();
   const [data, setData] = useState<OdometerRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!fleetId) return;
     async function fetchReadings() {
       const supabase = createClient();
       const { data: readings } = await supabase
         .from("odometer_readings")
         .select("*")
         .eq("vehicle_id", vehicleId)
+        .eq("fleet_id", fleetId!)
         .order("reading_date", { ascending: true });
 
       setData(readings ?? []);
       setLoading(false);
     }
     fetchReadings();
-  }, [vehicleId]);
+  }, [vehicleId, fleetId]);
 
   if (loading) {
     return (

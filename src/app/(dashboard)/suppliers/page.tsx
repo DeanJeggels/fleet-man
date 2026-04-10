@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useFleet } from "@/contexts/fleet-context";
 import type { Database } from "@/types/database";
 import { PageHeader } from "@/components/shared/page-header";
 import { DataTable, type ColumnDef } from "@/components/shared/data-table";
@@ -39,24 +40,28 @@ const columns: ColumnDef<Supplier>[] = [
 
 export default function SuppliersPage() {
   const router = useRouter();
+  const { fleetId } = useFleet();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const fetchSuppliers = useCallback(async () => {
+    if (!fleetId) return;
     setLoading(true);
     const supabase = createClient();
     const { data } = await supabase
       .from("suppliers")
       .select("*")
+      .eq("fleet_id", fleetId!)
       .order("name");
     setSuppliers((data as Supplier[]) ?? []);
     setLoading(false);
-  }, []);
+  }, [fleetId]);
 
   useEffect(() => {
+    if (!fleetId) return;
     fetchSuppliers();
-  }, [fetchSuppliers]);
+  }, [fetchSuppliers, fleetId]);
 
   return (
     <div className="space-y-6">

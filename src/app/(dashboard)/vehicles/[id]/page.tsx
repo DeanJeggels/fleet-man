@@ -11,6 +11,7 @@ import { FuelTab } from "@/components/vehicles/tabs/fuel-tab";
 import { OdometerTab } from "@/components/vehicles/tabs/odometer-tab";
 import { DriverHistoryTab } from "@/components/vehicles/tabs/driver-history-tab";
 import type { Tables } from "@/types/database";
+import { useFleet } from "@/contexts/fleet-context";
 
 type Vehicle = Tables<"vehicles">;
 
@@ -20,11 +21,13 @@ export default function VehicleDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const { fleetId } = useFleet();
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [currentDriverName, setCurrentDriverName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!fleetId) return;
     async function fetchVehicle() {
       const supabase = createClient();
 
@@ -32,6 +35,7 @@ export default function VehicleDetailPage({
         .from("vehicles")
         .select("*")
         .eq("id", id)
+        .eq("fleet_id", fleetId!)
         .single();
 
       if (data) {
@@ -42,6 +46,7 @@ export default function VehicleDetailPage({
           .from("vehicle_driver_assignments")
           .select("driver:drivers(first_name, last_name)")
           .eq("vehicle_id", id)
+          .eq("fleet_id", fleetId!)
           .is("unassigned_at", null)
           .order("assigned_at", { ascending: false })
           .limit(1)
@@ -59,7 +64,7 @@ export default function VehicleDetailPage({
       setLoading(false);
     }
     fetchVehicle();
-  }, [id]);
+  }, [id, fleetId]);
 
   if (loading) {
     return (

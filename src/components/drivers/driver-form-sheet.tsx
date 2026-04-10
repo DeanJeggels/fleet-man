@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useFleet } from "@/contexts/fleet-context";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
@@ -54,6 +55,7 @@ export function DriverFormSheet({
   onSaved,
 }: DriverFormSheetProps) {
   const supabase = createClient();
+  const { fleetId } = useFleet();
   const isEdit = !!driver;
 
   const [saving, setSaving] = useState(false);
@@ -121,7 +123,7 @@ export function DriverFormSheet({
         .update(payload)
         .eq("id", driver.id));
     } else {
-      ({ error } = await supabase.from("drivers").insert(payload));
+      ({ error } = await supabase.from("drivers").insert({ ...payload, fleet_id: fleetId! }));
     }
 
     setSaving(false);

@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useFleet } from "@/contexts/fleet-context";
 import { toast } from "sonner";
 import { Download, Loader2 } from "lucide-react";
 
@@ -88,7 +89,8 @@ const COLUMN_CONFIGS: Record<ReportType, ColumnDef<Row>[]> = {
 
 async function fetchReportData(
   reportType: ReportType,
-  filters: ReportFilters
+  filters: ReportFilters,
+  fleetId: string
 ): Promise<Row[]> {
   const supabase = createClient();
   const { startDate, endDate, vehicleId, supplierId } = filters;
@@ -98,6 +100,7 @@ async function fetchReportData(
       let q = supabase
         .from("maintenance_events")
         .select("event_date, category, cost_total, vehicle:vehicles(registration), supplier:suppliers(name), event_type:maintenance_event_types(name)")
+        .eq("fleet_id", fleetId)
         .order("event_date", { ascending: false })
         .limit(50);
       if (startDate) q = q.gte("event_date", startDate);
@@ -120,6 +123,7 @@ async function fetchReportData(
       let q = supabase
         .from("vehicles")
         .select("registration, make, model, total_maintenance_cost, total_fuel_cost")
+        .eq("fleet_id", fleetId)
         .order("registration")
         .limit(50);
       if (vehicleId) q = q.eq("id", vehicleId);
@@ -137,6 +141,7 @@ async function fetchReportData(
       let q = supabase
         .from("suppliers")
         .select("name, event_count, total_spend")
+        .eq("fleet_id", fleetId)
         .order("total_spend", { ascending: false })
         .limit(50);
       if (supplierId) q = q.eq("id", supplierId);
@@ -153,6 +158,7 @@ async function fetchReportData(
       let q = supabase
         .from("fuel_logs")
         .select("week_starting, litres, cost, odometer_reading, vehicle:vehicles(registration)")
+        .eq("fleet_id", fleetId)
         .order("week_starting", { ascending: false })
         .limit(50);
       if (startDate) q = q.gte("week_starting", startDate);
@@ -173,6 +179,7 @@ async function fetchReportData(
       let q = supabase
         .from("uber_trip_data")
         .select("period_date, total_trips, hours_online, distance_km, total_earnings, vehicle:vehicles(registration)")
+        .eq("fleet_id", fleetId)
         .order("period_date", { ascending: false })
         .limit(50);
       if (startDate) q = q.gte("period_date", startDate);
@@ -194,6 +201,7 @@ async function fetchReportData(
       let q = supabase
         .from("maintenance_events")
         .select("category, cost_total")
+        .eq("fleet_id", fleetId)
         .limit(1000);
       if (startDate) q = q.gte("event_date", startDate);
       if (endDate) q = q.lte("event_date", endDate);
@@ -219,6 +227,7 @@ async function fetchReportData(
       let q = supabase
         .from("uber_trip_data")
         .select("period_date, distance_km, vehicle:vehicles(registration, make, model)")
+        .eq("fleet_id", fleetId)
         .order("period_date", { ascending: true })
         .limit(1000);
       if (startDate) q = q.gte("period_date", startDate);
@@ -259,6 +268,7 @@ interface ReportViewerProps {
 }
 
 export function ReportViewer({ reportType, filters, trigger }: ReportViewerProps) {
+  const { fleetId } = useFleet();
   const [data, setData] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -268,9 +278,10 @@ export function ReportViewer({ reportType, filters, trigger }: ReportViewerProps
   const columns = COLUMN_CONFIGS[reportType];
 
   const doFetch = useCallback(async () => {
+    if (!fleetId) return;
     setLoading(true);
     try {
-      const result = await fetchReportData(reportType, filters);
+      const result = await fetchReportData(reportType, filters, fleetId);
       setData(result);
       setHasFetched(true);
     } catch (err) {
@@ -279,7 +290,7 @@ export function ReportViewer({ reportType, filters, trigger }: ReportViewerProps
     } finally {
       setLoading(false);
     }
-  }, [reportType, filters]);
+  }, [reportType, filters, fleetId]);
 
   // Trigger fetch when trigger changes
   if (trigger > 0 && trigger !== lastTrigger) {
@@ -294,6 +305,7 @@ export function ReportViewer({ reportType, filters, trigger }: ReportViewerProps
       const { data: csvData, error } = await supabase.functions.invoke("fleet-csv-report", {
         body: {
           report_type: reportType,
+          fleet_id: fleetId!,
           filters: {
             start_date: filters.startDate,
             end_date: filters.endDate,

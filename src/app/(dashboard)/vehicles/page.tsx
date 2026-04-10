@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { VehicleFormSheet } from "@/components/vehicles/vehicle-form-sheet";
 import { Plus, Search, Car } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
+import { useFleet } from "@/contexts/fleet-context";
 
 type VehicleWithDriver = Vehicle & {
   vehicle_driver_assignments: {
@@ -36,6 +37,7 @@ const kmFormat = new Intl.NumberFormat("en-ZA");
 
 export default function VehiclesPage() {
   const router = useRouter();
+  const { fleetId } = useFleet();
   const [vehicles, setVehicles] = useState<VehicleWithDriver[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -43,6 +45,7 @@ export default function VehiclesPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const fetchVehicles = useCallback(async () => {
+    if (!fleetId) return;
     setLoading(true);
     const supabase = createClient();
     const { data, error } = await supabase
@@ -50,13 +53,14 @@ export default function VehiclesPage() {
       .select(
         "*, vehicle_driver_assignments(driver:drivers(first_name, last_name))"
       )
+      .eq("fleet_id", fleetId!)
       .order("registration");
 
     if (!error && data) {
       setVehicles(data as unknown as VehicleWithDriver[]);
     }
     setLoading(false);
-  }, []);
+  }, [fleetId]);
 
   useEffect(() => {
     fetchVehicles();

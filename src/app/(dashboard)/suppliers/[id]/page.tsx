@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useFleet } from "@/contexts/fleet-context";
 import { ArrowLeft, DollarSign, Phone, Mail, MapPin } from "lucide-react";
 import {
   BarChart,
@@ -79,21 +80,23 @@ const eventColumns: ColumnDef<EventWithVehicle>[] = [
 export default function SupplierDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const { fleetId } = useFleet();
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [events, setEvents] = useState<EventWithVehicle[]>([]);
   const [monthlySpend, setMonthlySpend] = useState<MonthlySpend[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
-    if (!params.id) return;
+    if (!params.id || !fleetId) return;
     setLoading(true);
     const supabase = createClient();
 
     const [supplierRes, eventsRes] = await Promise.all([
-      supabase.from("suppliers").select("*").eq("id", params.id).single(),
+      supabase.from("suppliers").select("*").eq("fleet_id", fleetId!).eq("id", params.id).single(),
       supabase
         .from("maintenance_events")
         .select("*, vehicles(registration)")
+        .eq("fleet_id", fleetId!)
         .eq("supplier_id", params.id)
         .order("event_date", { ascending: false }),
     ]);
@@ -116,11 +119,12 @@ export default function SupplierDetailPage() {
     setMonthlySpend(sorted);
 
     setLoading(false);
-  }, [params.id]);
+  }, [params.id, fleetId]);
 
   useEffect(() => {
+    if (!fleetId) return;
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, fleetId]);
 
   if (loading) {
     return (

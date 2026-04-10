@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { createClient } from "@/lib/supabase/client";
+import { useFleet } from "@/contexts/fleet-context";
 import type { MaintenanceCategory } from "@/types/database";
 
 interface MaintenanceRow {
@@ -46,11 +47,13 @@ const zarFormat = new Intl.NumberFormat("en-ZA", {
 });
 
 export function RecentMaintenance() {
+  const { fleetId } = useFleet();
   const [rows, setRows] = useState<MaintenanceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const isMobile = useIsMobile();
 
   useEffect(() => {
+    if (!fleetId) return;
     async function fetchData() {
       const supabase = createClient();
       const { data } = await supabase
@@ -58,6 +61,7 @@ export function RecentMaintenance() {
         .select(
           "id, event_date, description, category, cost_total, vehicle:vehicles(registration)"
         )
+        .eq("fleet_id", fleetId!)
         .order("event_date", { ascending: false })
         .limit(8);
 
@@ -72,7 +76,7 @@ export function RecentMaintenance() {
       setLoading(false);
     }
     fetchData();
-  }, []);
+  }, [fleetId]);
 
   if (loading) {
     return (

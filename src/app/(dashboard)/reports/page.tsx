@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useFleet } from "@/contexts/fleet-context";
 import { format } from "date-fns";
 import {
   Wrench,
@@ -89,6 +90,7 @@ const SUPPLIER_REPORTS: ReportType[] = ["maintenance_history", "supplier_spend"]
 
 export default function ReportsPage() {
   const supabase = createClient();
+  const { fleetId } = useFleet();
 
   const [selectedReport, setSelectedReport] = useState<ReportType>("maintenance_history");
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
@@ -104,10 +106,11 @@ export default function ReportsPage() {
   const [endOpen, setEndOpen] = useState(false);
 
   useEffect(() => {
+    if (!fleetId) return;
     async function load() {
       const [vRes, sRes] = await Promise.all([
-        supabase.from("vehicles").select("id, registration, make, model").order("registration"),
-        supabase.from("suppliers").select("id, name").order("name"),
+        supabase.from("vehicles").select("id, registration, make, model").eq("fleet_id", fleetId!).order("registration"),
+        supabase.from("suppliers").select("id, name").eq("fleet_id", fleetId!).order("name"),
       ]);
       setVehicles(
         (vRes.data ?? []).map((v) => ({
@@ -119,7 +122,7 @@ export default function ReportsPage() {
     }
     load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fleetId]);
 
   const showSupplierFilter = SUPPLIER_REPORTS.includes(selectedReport);
 

@@ -27,6 +27,7 @@ import {
   WrenchIcon,
 } from "lucide-react"
 import type { Tables } from "@/types/database"
+import { useFleet } from "@/contexts/fleet-context"
 
 type ServiceSchedule = Tables<"service_schedules">
 
@@ -67,6 +68,7 @@ export function ServiceScheduleCard({
   vehicleId,
   currentOdometer,
 }: ServiceScheduleCardProps) {
+  const { fleetId } = useFleet()
   const [schedule, setSchedule] = React.useState<ServiceSchedule | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [dialogOpen, setDialogOpen] = React.useState(false)
@@ -83,19 +85,21 @@ export function ServiceScheduleCard({
   const [nextDateOpen, setNextDateOpen] = React.useState(false)
 
   React.useEffect(() => {
+    if (!fleetId) return
     async function fetch() {
       const supabase = createClient()
       const { data } = await supabase
         .from("service_schedules")
         .select("*")
         .eq("vehicle_id", vehicleId)
+        .eq("fleet_id", fleetId!)
         .maybeSingle()
 
       if (data) setSchedule(data)
       setLoading(false)
     }
     fetch()
-  }, [vehicleId])
+  }, [vehicleId, fleetId])
 
   function populateForm(s: ServiceSchedule | null) {
     if (s) {
@@ -141,6 +145,7 @@ export function ServiceScheduleCard({
 
     const payload = {
       vehicle_id: vehicleId,
+      fleet_id: fleetId!,
       interval_km: intervalKm ? Number(intervalKm) : null,
       interval_months: intervalMonths ? Number(intervalMonths) : null,
       last_service_date: lastServiceDate
