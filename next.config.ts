@@ -24,11 +24,15 @@ const nextConfig: NextConfig = {
           key: "Content-Security-Policy",
           value: [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+            // unsafe-eval + wasm-unsafe-eval needed by @react-pdf/renderer; blob: for dynamic chunks
+            "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline' blob:",
             "style-src 'self' 'unsafe-inline'",
             `img-src 'self' data: blob: ${supabaseHttpHost}`.trim(),
             `connect-src 'self' ${supabaseHttpHost} ${supabaseWsHost}`.trim(),
-            "font-src 'self'",
+            // data: needed for @react-pdf/renderer embedded Helvetica font
+            "font-src 'self' data:",
+            // @react-pdf/renderer spawns an internal worker from a blob URL on some paths
+            "worker-src 'self' blob:",
             "frame-ancestors 'none'",
           ].join("; "),
         },
