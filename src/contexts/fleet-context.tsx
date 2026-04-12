@@ -27,32 +27,64 @@ export function FleetProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const supabase = createClient()
+    let cancelled = false
+
     async function loadProfile() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError) console.error("[FleetContext] auth.getUser error:", authError)
 
       if (!user) {
-        setLoading(false)
+        if (!cancelled) {
+          setFleetId(null)
+          setRole(null)
+          setDisplayName(null)
+          setLoading(false)
+        }
         return
       }
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles_fleet")
         .select("fleet_id, role, display_name")
         .eq("user_id", user.id)
-        .limit(1)
-        .single()
+        .maybeSingle()
+
+      if (error) {
+        console.error("[FleetContext] profiles_fleet fetch error:", error)
+      }
+      if (!data) {
+        console.warn("[FleetContext] no profiles_fleet row for user", user.id)
+      }
+
+      if (cancelled) return
 
       if (data) {
         setFleetId(data.fleet_id)
         setRole(data.role as FleetRole)
         setDisplayName(data.display_name)
+      } else {
+        setFleetId(null)
+        setRole(null)
+        setDisplayName(null)
       }
-
       setLoading(false)
     }
 
     loadProfile()
+
+    // Re-fetch on auth change (sign in/out, token refresh)
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "SIGNED_OUT") {
+        setLoading(true)
+        loadProfile()
+      }
+    })
+
+    return () => {
+      cancelled = true
+      sub.subscription.unsubscribe()
+    }
   }, [])
 
   if (loading) {
