@@ -56,7 +56,7 @@ function LicenseExpiryBadge({ expiry }: { expiry: string }) {
 
 export default function DriversPage() {
   const supabase = createClient();
-  const { fleetId } = useFleet();
+  const { fleetId, isOwnerOrAdmin } = useFleet();
   const [drivers, setDrivers] = useState<DriverWithAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -126,6 +126,22 @@ export default function DriversPage() {
         render: (row) => `${row.first_name} ${row.last_name}`,
       },
       {
+        key: "category",
+        header: "Category",
+        render: (row) => (
+          <Badge
+            variant="outline"
+            className={
+              row.category === "contract"
+                ? "bg-purple-100 text-purple-700"
+                : "bg-blue-100 text-blue-700"
+            }
+          >
+            {row.category}
+          </Badge>
+        ),
+      },
+      {
         key: "license_number",
         header: "License #",
       },
@@ -167,27 +183,31 @@ export default function DriversPage() {
             <span className="text-muted-foreground">-</span>
           ),
       },
-      {
-        key: "actions",
-        header: "",
-        render: (row) => (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-destructive hover:text-destructive cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAnonymise(row.id as string);
-            }}
-          >
-            <ShieldOff className="mr-1.5 h-4 w-4" />
-            Anonymise
-          </Button>
-        ),
-      },
+      ...(isOwnerOrAdmin
+        ? [
+            {
+              key: "actions",
+              header: "",
+              render: (row: DriverWithAssignment) => (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive hover:text-destructive cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAnonymise(row.id as string);
+                  }}
+                >
+                  <ShieldOff className="mr-1.5 h-4 w-4" />
+                  Anonymise
+                </Button>
+              ),
+            },
+          ]
+        : []),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [fleetId]
+    [fleetId, isOwnerOrAdmin]
   );
 
   return (
@@ -196,10 +216,12 @@ export default function DriversPage() {
         title="Drivers"
         description="Manage your fleet drivers"
         action={
-          <Button onClick={handleAdd} className="cursor-pointer">
-            <Plus className="mr-1.5 h-4 w-4" />
-            Add Driver
-          </Button>
+          isOwnerOrAdmin ? (
+            <Button onClick={handleAdd} className="cursor-pointer">
+              <Plus className="mr-1.5 h-4 w-4" />
+              Add Driver
+            </Button>
+          ) : undefined
         }
       />
 

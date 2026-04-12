@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { Vehicle, VehicleStatus } from "@/types/database";
+import type { Vehicle, VehicleStatus, FleetCategory } from "@/types/database";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -63,6 +63,7 @@ export function VehicleFormSheet({
   const [vin, setVin] = useState("");
   const [vehicleType, setVehicleType] = useState("");
   const [color, setColor] = useState("");
+  const [category, setCategory] = useState<FleetCategory>("uber");
   const [status, setStatus] = useState<VehicleStatus>("active");
   const [dateAdded, setDateAdded] = useState<Date | undefined>(undefined);
   const [notes, setNotes] = useState("");
@@ -78,6 +79,7 @@ export function VehicleFormSheet({
       setVin(vehicle.vin ?? "");
       setVehicleType(vehicle.vehicle_type ?? "");
       setColor(vehicle.color ?? "");
+      setCategory(vehicle.category);
       setStatus(vehicle.status);
       setDateAdded(vehicle.date_added ? parseISO(vehicle.date_added) : undefined);
       setNotes(vehicle.notes ?? "");
@@ -89,6 +91,7 @@ export function VehicleFormSheet({
       setVin("");
       setVehicleType("");
       setColor("");
+      setCategory("uber");
       setStatus("active");
       setDateAdded(undefined);
       setNotes("");
@@ -117,6 +120,7 @@ export function VehicleFormSheet({
       vin: vin.trim() || null,
       vehicle_type: vehicleType.trim() || null,
       color: color.trim() || null,
+      category,
       status,
       date_added: dateAdded ? format(dateAdded, "yyyy-MM-dd") : undefined,
       notes: notes.trim() || null,
@@ -231,29 +235,42 @@ export function VehicleFormSheet({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-1.5">
+              <Label>Category</Label>
+              <Select value={category} onValueChange={(val) => setCategory((val ?? "uber") as FleetCategory)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="uber">Uber</SelectItem>
+                  <SelectItem value="contract">Contract</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-1.5">
               <Label htmlFor="vehicleType">Vehicle Type</Label>
               <Input
                 id="vehicleType"
                 value={vehicleType}
                 onChange={(e) => setVehicleType(e.target.value)}
-                placeholder="e.g. Sedan"
+                placeholder="e.g. Sedan, Minivan"
               />
             </div>
-            <div className="grid gap-1.5">
-              <Label>Status</Label>
-              <Select value={status} onValueChange={(val) => setStatus(val as VehicleStatus)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUS_OPTIONS.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s.charAt(0).toUpperCase() + s.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          </div>
+
+          <div className="grid gap-1.5">
+            <Label>Status</Label>
+            <Select value={status} onValueChange={(val) => setStatus((val ?? "active") as VehicleStatus)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid gap-1.5">

@@ -2,12 +2,14 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import { createClient } from "@/lib/supabase/client"
+import type { FleetRole } from "@/types/database"
 
 interface FleetContextValue {
   fleetId: string | null
-  role: string | null
+  role: FleetRole | null
   displayName: string | null
   loading: boolean
+  isOwnerOrAdmin: boolean
 }
 
 const FleetContext = createContext<FleetContextValue>({
@@ -15,11 +17,12 @@ const FleetContext = createContext<FleetContextValue>({
   role: null,
   displayName: null,
   loading: true,
+  isOwnerOrAdmin: false,
 })
 
 export function FleetProvider({ children }: { children: ReactNode }) {
   const [fleetId, setFleetId] = useState<string | null>(null)
-  const [role, setRole] = useState<string | null>(null)
+  const [role, setRole] = useState<FleetRole | null>(null)
   const [displayName, setDisplayName] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -42,7 +45,7 @@ export function FleetProvider({ children }: { children: ReactNode }) {
 
       if (data) {
         setFleetId(data.fleet_id)
-        setRole(data.role)
+        setRole(data.role as FleetRole)
         setDisplayName(data.display_name)
       }
 
@@ -60,8 +63,10 @@ export function FleetProvider({ children }: { children: ReactNode }) {
     )
   }
 
+  const isOwnerOrAdmin = role === "owner" || role === "admin"
+
   return (
-    <FleetContext.Provider value={{ fleetId, role, displayName, loading }}>
+    <FleetContext.Provider value={{ fleetId, role, displayName, loading, isOwnerOrAdmin }}>
       {children}
     </FleetContext.Provider>
   )

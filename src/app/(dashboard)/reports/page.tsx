@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { PageHeader } from "@/components/shared/page-header";
+import { OwnerOnlyGuard } from "@/components/shared/owner-only-guard";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -89,6 +90,14 @@ const REPORT_OPTIONS: ReportOption[] = [
 const SUPPLIER_REPORTS: ReportType[] = ["maintenance_history", "supplier_spend"];
 
 export default function ReportsPage() {
+  return (
+    <OwnerOnlyGuard>
+      <ReportsPageContent />
+    </OwnerOnlyGuard>
+  );
+}
+
+function ReportsPageContent() {
   const supabase = createClient();
   const { fleetId } = useFleet();
 

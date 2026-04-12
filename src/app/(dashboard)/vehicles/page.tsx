@@ -3,7 +3,8 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import type { Vehicle, VehicleStatus } from "@/types/database";
+import type { Vehicle, VehicleStatus, FleetCategory } from "@/types/database";
+import { Badge } from "@/components/ui/badge";
 import { DataTable, type ColumnDef } from "@/components/shared/data-table";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { PageHeader } from "@/components/shared/page-header";
@@ -37,11 +38,12 @@ const kmFormat = new Intl.NumberFormat("en-ZA");
 
 export default function VehiclesPage() {
   const router = useRouter();
-  const { fleetId } = useFleet();
+  const { fleetId, isOwnerOrAdmin } = useFleet();
   const [vehicles, setVehicles] = useState<VehicleWithDriver[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | "all">("all");
+  const [categoryFilter, setCategoryFilter] = useState<FleetCategory | "all">("all");
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const fetchVehicles = useCallback(async () => {
@@ -73,6 +75,10 @@ export default function VehiclesPage() {
       result = result.filter((v) => v.status === statusFilter);
     }
 
+    if (categoryFilter !== "all") {
+      result = result.filter((v) => v.category === categoryFilter);
+    }
+
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
@@ -84,7 +90,7 @@ export default function VehiclesPage() {
     }
 
     return result;
-  }, [vehicles, statusFilter, search]);
+  }, [vehicles, statusFilter, categoryFilter, search]);
 
   function getDriverName(v: VehicleWithDriver): string {
     const assignment = v.vehicle_driver_assignments?.[0];
@@ -99,6 +105,22 @@ export default function VehiclesPage() {
       sortable: true,
       render: (row) => (
         <span className="font-medium">{String(row.registration)}</span>
+      ),
+    },
+    {
+      key: "category",
+      header: "Category",
+      render: (row) => (
+        <Badge
+          variant="outline"
+          className={
+            row.category === "contract"
+              ? "bg-purple-100 text-purple-700"
+              : "bg-blue-100 text-blue-700"
+          }
+        >
+          {String(row.category)}
+        </Badge>
       ),
     },
     {
@@ -133,15 +155,19 @@ export default function VehiclesPage() {
       header: "Driver",
       render: (row) => getDriverName(row as unknown as VehicleWithDriver),
     },
-    {
-      key: "total_cost",
-      header: "Total Cost",
-      sortable: true,
-      render: (row) =>
-        zarFormat.format(
-          Number(row.total_maintenance_cost) + Number(row.total_fuel_cost)
-        ),
-    },
+    ...(isOwnerOrAdmin
+      ? [
+          {
+            key: "total_cost",
+            header: "Total Cost",
+            sortable: true,
+            render: (row: Record<string, unknown>) =>
+              zarFormat.format(
+                Number(row.total_maintenance_cost) + Number(row.total_fuel_cost)
+              ),
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -150,10 +176,12 @@ export default function VehiclesPage() {
         title="Vehicles"
         description="Manage your fleet vehicles"
         action={
-          <Button onClick={() => setSheetOpen(true)} className="cursor-pointer">
-            <Plus className="mr-1.5 h-4 w-4" />
-            Add Vehicle
-          </Button>
+          isOwnerOrAdmin ? (
+            <Button onClick={() => setSheetOpen(true)} className="cursor-pointer">
+              <Plus className="mr-1.5 h-4 w-4" />
+              Add Vehicle
+            </Button>
+          ) : undefined
         }
       />
 
@@ -170,7 +198,19 @@ export default function VehiclesPage() {
           />
         </div>
 
-        <div className="flex gap-1">
+        <div className="flex flex-wrap gap-1">
+          {(["all", "uber", "contract"] as const).map((c) => (
+            <Button
+              key={c}
+              variant={categoryFilter === c ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCategoryFilter(c)}
+              className="cursor-pointer"
+            >
+              {c === "all" ? "All" : c.charAt(0).toUpperCase() + c.slice(1)}
+            </Button>
+          ))}
+          <span className="mx-1 text-muted-foreground">|</span>
           {STATUS_FILTERS.map((sf) => (
             <Button
               key={sf.value}

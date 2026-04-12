@@ -11,6 +11,7 @@ import {
   Fuel,
   BarChart3,
   Settings,
+  Briefcase,
 } from "lucide-react";
 import {
   Sidebar,
@@ -24,20 +25,26 @@ import {
   SidebarFooter,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { useFleet } from "@/contexts/fleet-context";
 
+// ownerOnly items are hidden from members
 const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-  { label: "Vehicles", icon: Car, href: "/vehicles" },
-  { label: "Maintenance", icon: Wrench, href: "/maintenance/new" },
-  { label: "Drivers", icon: Users, href: "/drivers" },
-  { label: "Suppliers", icon: Building2, href: "/suppliers" },
-  { label: "Fuel Log", icon: Fuel, href: "/fuel" },
-  { label: "Reports", icon: BarChart3, href: "/reports" },
-  { label: "Settings", icon: Settings, href: "/settings" },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", ownerOnly: false },
+  { label: "Vehicles", icon: Car, href: "/vehicles", ownerOnly: false },
+  { label: "Maintenance", icon: Wrench, href: "/maintenance/new", ownerOnly: false },
+  { label: "Drivers", icon: Users, href: "/drivers", ownerOnly: false },
+  { label: "Contract", icon: Briefcase, href: "/contract", ownerOnly: true },
+  { label: "Suppliers", icon: Building2, href: "/suppliers", ownerOnly: true },
+  { label: "Fuel Log", icon: Fuel, href: "/fuel", ownerOnly: true },
+  { label: "Reports", icon: BarChart3, href: "/reports", ownerOnly: true },
+  { label: "Settings", icon: Settings, href: "/settings", ownerOnly: false },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { isOwnerOrAdmin } = useFleet();
+
+  const visibleItems = navItems.filter((item) => isOwnerOrAdmin || !item.ownerOnly);
 
   return (
     <Sidebar className="border-r-0">
@@ -55,7 +62,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => {
+              {visibleItems.map((item) => {
                 const isActive =
                   pathname === item.href ||
                   (item.href !== "/dashboard" &&

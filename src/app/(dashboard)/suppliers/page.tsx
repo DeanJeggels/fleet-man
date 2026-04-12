@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useFleet } from "@/contexts/fleet-context";
 import type { Database } from "@/types/database";
 import { PageHeader } from "@/components/shared/page-header";
+import { OwnerOnlyGuard } from "@/components/shared/owner-only-guard";
 import { DataTable, type ColumnDef } from "@/components/shared/data-table";
 import { Button } from "@/components/ui/button";
 import { SupplierFormSheet } from "@/components/suppliers/supplier-form-sheet";
@@ -20,6 +21,14 @@ const formatZAR = new Intl.NumberFormat("en-ZA", {
 });
 
 export default function SuppliersPage() {
+  return (
+    <OwnerOnlyGuard>
+      <SuppliersPageContent />
+    </OwnerOnlyGuard>
+  );
+}
+
+function SuppliersPageContent() {
   const router = useRouter();
   const { fleetId } = useFleet();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);

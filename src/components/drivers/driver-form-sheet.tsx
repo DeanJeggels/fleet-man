@@ -6,7 +6,7 @@ import { useFleet } from "@/contexts/fleet-context";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import type { Driver, DriverStatus } from "@/types/database";
+import type { Driver, DriverStatus, FleetCategory } from "@/types/database";
 
 import {
   Sheet,
@@ -69,6 +69,9 @@ export function DriverFormSheet({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [status, setStatus] = useState<DriverStatus>("active");
+  const [category, setCategory] = useState<FleetCategory>("uber");
+  const [commissionPerTrip, setCommissionPerTrip] = useState("");
+  const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [uberDriverId, setUberDriverId] = useState("");
   const [notes, setNotes] = useState("");
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -82,6 +85,9 @@ export function DriverFormSheet({
       setEmail(driver.email ?? "");
       setPhone(driver.phone ?? "");
       setStatus(driver.status);
+      setCategory(driver.category);
+      setCommissionPerTrip(driver.commission_per_trip != null ? String(driver.commission_per_trip) : "");
+      setBankAccountNumber(driver.bank_account_number ?? "");
       setUberDriverId(driver.uber_driver_id ?? "");
       setNotes(driver.notes ?? "");
     } else {
@@ -92,6 +98,9 @@ export function DriverFormSheet({
       setEmail("");
       setPhone("");
       setStatus("active");
+      setCategory("uber");
+      setCommissionPerTrip("");
+      setBankAccountNumber("");
       setUberDriverId("");
       setNotes("");
       setConsented(false);
@@ -113,6 +122,13 @@ export function DriverFormSheet({
     const trimmedEmail = email.trim().slice(0, 200);
     const trimmedPhone = phone.trim().slice(0, 200);
 
+    const commission = commissionPerTrip ? Number(commissionPerTrip) : null;
+    if (commission !== null && (!isFinite(commission) || commission < 0)) {
+      toast.error("Commission must be a positive number");
+      setSaving(false);
+      return;
+    }
+
     const payload = {
       first_name: trimmedFirstName,
       last_name: trimmedLastName,
@@ -121,6 +137,9 @@ export function DriverFormSheet({
       email: trimmedEmail || null,
       phone: trimmedPhone || null,
       status,
+      category,
+      commission_per_trip: commission,
+      bank_account_number: bankAccountNumber.trim().slice(0, 200) || null,
       uber_driver_id: uberDriverId || null,
       notes: notes || null,
     };
@@ -248,8 +267,20 @@ export function DriverFormSheet({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
+              <Label>Category</Label>
+              <Select value={category} onValueChange={(v) => setCategory((v ?? "uber") as FleetCategory)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="uber">Uber</SelectItem>
+                  <SelectItem value="contract">Contract</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label>Status</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as DriverStatus)}>
+              <Select value={status} onValueChange={(v) => setStatus((v ?? "active") as DriverStatus)}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -271,6 +302,36 @@ export function DriverFormSheet({
               />
             </div>
           </div>
+
+          {category === "contract" && (
+            <div className="grid grid-cols-2 gap-4 rounded-md border p-3 bg-muted/20">
+              <div className="space-y-2 col-span-2">
+                <p className="text-xs font-medium text-muted-foreground">Contract driver details</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="commission">Commission per Trip (ZAR)</Label>
+                <Input
+                  id="commission"
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step="0.01"
+                  value={commissionPerTrip}
+                  onChange={(e) => setCommissionPerTrip(e.target.value)}
+                  placeholder="e.g. 150"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bank">Bank Account</Label>
+                <Input
+                  id="bank"
+                  value={bankAccountNumber}
+                  onChange={(e) => setBankAccountNumber(e.target.value)}
+                  placeholder="Account number"
+                />
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
