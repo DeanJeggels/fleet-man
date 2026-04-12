@@ -88,6 +88,9 @@ function PayoutsContent() {
     fetchAll()
   }, [fetchAll])
 
+  const selectedDriver = drivers.find((d) => d.id === driverId)
+  const driverLabel = selectedDriver ? `${selectedDriver.first_name} ${selectedDriver.last_name}` : null
+
   async function previewPayout() {
     if (!fleetId || !driverId) return
     const supabase = createClient()
@@ -233,8 +236,12 @@ function PayoutsContent() {
                 <div className="space-y-1.5">
                   <Label>Driver *</Label>
                   <Select value={driverId} onValueChange={(v) => setDriverId(v ?? "")}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select driver" />
+                    <SelectTrigger className="w-full">
+                      {driverLabel ? (
+                        <span className="flex flex-1 text-left truncate">{driverLabel}</span>
+                      ) : (
+                        <SelectValue placeholder="Select driver" />
+                      )}
                     </SelectTrigger>
                     <SelectContent>
                       {drivers.map((d) => (
