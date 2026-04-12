@@ -188,6 +188,12 @@ function NewInvoiceContent() {
     router.push(`/contract/invoices/${invoice.id}`)
   }
 
+  // Derived labels — base-ui Select can't resolve UUIDs to labels automatically
+  const selectedClient = clients.find((c) => c.id === clientId)
+  const clientLabel = selectedClient?.name ?? null
+  const selectedDriver = drivers.find((d) => d.id === driverId)
+  const driverLabel = selectedDriver ? `${selectedDriver.first_name} ${selectedDriver.last_name}` : null
+
   return (
     <div className="space-y-6">
       <PageHeader title="New Invoice" description="Bundle uninvoiced trips into a new client invoice" />
@@ -201,8 +207,12 @@ function NewInvoiceContent() {
             <div className="space-y-1.5">
               <Label>Client *</Label>
               <Select value={clientId} onValueChange={(v) => setClientId(v ?? "")}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select client" />
+                <SelectTrigger className="w-full">
+                  {clientLabel ? (
+                    <span className="flex flex-1 text-left truncate">{clientLabel}</span>
+                  ) : (
+                    <SelectValue placeholder="Select client" />
+                  )}
                 </SelectTrigger>
                 <SelectContent>
                   {clients.map((c) => (
@@ -216,8 +226,12 @@ function NewInvoiceContent() {
             <div className="space-y-1.5">
               <Label>Driver (optional filter)</Label>
               <Select value={driverId} onValueChange={(v) => setDriverId(v ?? "")}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All drivers" />
+                <SelectTrigger className="w-full">
+                  {driverLabel ? (
+                    <span className="flex flex-1 text-left truncate">{driverLabel}</span>
+                  ) : (
+                    <SelectValue placeholder="All drivers" />
+                  )}
                 </SelectTrigger>
                 <SelectContent>
                   {drivers.map((d) => (

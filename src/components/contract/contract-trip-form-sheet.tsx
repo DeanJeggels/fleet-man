@@ -170,6 +170,17 @@ export function ContractTripFormSheet({
     onSaved()
   }
 
+  // Derive display labels so the SelectTrigger shows the actual name,
+  // not the raw UUID (base-ui Select can't resolve labels when value is set programmatically)
+  const selectedClient = clients.find((c) => c.id === clientId)
+  const clientLabel = selectedClient?.name ?? null
+
+  const selectedDriver = drivers.find((d) => d.id === driverId)
+  const driverLabel = selectedDriver ? `${selectedDriver.first_name} ${selectedDriver.last_name}` : null
+
+  const selectedVehicle = vehicles.find((v) => v.id === vehicleId)
+  const vehicleLabel = selectedVehicle?.registration ?? null
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right">
@@ -184,8 +195,12 @@ export function ContractTripFormSheet({
           <div className="space-y-1.5">
             <Label htmlFor="client">Client *</Label>
             <Select value={clientId} onValueChange={(v) => setClientId(v ?? "")}>
-              <SelectTrigger id="client">
-                <SelectValue placeholder="Select client" />
+              <SelectTrigger id="client" className="w-full">
+                {clientLabel ? (
+                  <span className="flex flex-1 text-left truncate">{clientLabel}</span>
+                ) : (
+                  <SelectValue placeholder="Select client" />
+                )}
               </SelectTrigger>
               <SelectContent>
                 {clients.map((c) => (
@@ -201,8 +216,12 @@ export function ContractTripFormSheet({
             <div className="space-y-1.5">
               <Label htmlFor="driver">Driver</Label>
               <Select value={driverId} onValueChange={(v) => setDriverId(v ?? "")}>
-                <SelectTrigger id="driver">
-                  <SelectValue placeholder="Select driver" />
+                <SelectTrigger id="driver" className="w-full">
+                  {driverLabel ? (
+                    <span className="flex flex-1 text-left truncate">{driverLabel}</span>
+                  ) : (
+                    <SelectValue placeholder="Select driver" />
+                  )}
                 </SelectTrigger>
                 <SelectContent>
                   {drivers.map((d) => (
@@ -216,8 +235,12 @@ export function ContractTripFormSheet({
             <div className="space-y-1.5">
               <Label htmlFor="vehicle">Vehicle</Label>
               <Select value={vehicleId} onValueChange={(v) => setVehicleId(v ?? "")}>
-                <SelectTrigger id="vehicle">
-                  <SelectValue placeholder="Select vehicle" />
+                <SelectTrigger id="vehicle" className="w-full">
+                  {vehicleLabel ? (
+                    <span className="flex flex-1 text-left truncate">{vehicleLabel}</span>
+                  ) : (
+                    <SelectValue placeholder="Select vehicle" />
+                  )}
                 </SelectTrigger>
                 <SelectContent>
                   {vehicles.map((v) => (
