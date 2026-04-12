@@ -28,7 +28,8 @@ const nextConfig: NextConfig = {
             "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline' blob:",
             "style-src 'self' 'unsafe-inline'",
             `img-src 'self' data: blob: ${supabaseHttpHost}`.trim(),
-            `connect-src 'self' ${supabaseHttpHost} ${supabaseWsHost}`.trim(),
+            // data: + blob: needed for @react-pdf/renderer internal font/WASM fetch
+            `connect-src 'self' data: blob: ${supabaseHttpHost} ${supabaseWsHost}`.trim(),
             // data: needed for @react-pdf/renderer embedded Helvetica font
             "font-src 'self' data:",
             // @react-pdf/renderer spawns an internal worker from a blob URL on some paths

@@ -14,11 +14,13 @@ const zar = new Intl.NumberFormat("en-ZA", {
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 10, fontFamily: "Helvetica", lineHeight: 1.4 },
   company: { fontSize: 18, color: "#2563eb", marginBottom: 4, fontFamily: "Helvetica-Bold" },
-  companyMeta: { fontSize: 9, fontStyle: "italic", color: "#444" },
+  // @react-pdf/renderer built-in fonts don't include italic variants,
+  // so use color + fontFamily for visual distinction instead of fontStyle.
+  companyMeta: { fontSize: 9, color: "#666" },
   spacer: { height: 14 },
   boldHead: { fontFamily: "Helvetica-Bold", fontSize: 10, marginBottom: 2 },
   toBlock: { fontFamily: "Helvetica-Bold", fontSize: 13, color: "#2563eb" },
-  meta: { fontSize: 9, fontStyle: "italic", marginTop: 2 },
+  meta: { fontSize: 9, marginTop: 2, color: "#555" },
   table: { marginTop: 14, borderWidth: 1, borderColor: "#000" },
   row: { flexDirection: "row", borderBottomWidth: 1, borderColor: "#000", minHeight: 18 },
   headerRow: { backgroundColor: "#f5f5f5", fontFamily: "Helvetica-Bold" },
