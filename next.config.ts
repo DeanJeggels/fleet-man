@@ -1,5 +1,12 @@
 import type { NextConfig } from "next";
 
+// Derive the Supabase host from the public env var so the CSP always
+// matches whichever project the app is wired to. Falls back to a safe
+// empty allowlist if the var is missing at build time.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const supabaseHttpHost = supabaseUrl || "";
+const supabaseWsHost = supabaseUrl ? supabaseUrl.replace(/^https:\/\//, "wss://") : "";
+
 const nextConfig: NextConfig = {
   reactCompiler: true,
   images: {
@@ -19,8 +26,8 @@ const nextConfig: NextConfig = {
             "default-src 'self'",
             "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
             "style-src 'self' 'unsafe-inline'",
-            "img-src 'self' data: blob: https://dplbfhwqbmnzmrncxain.supabase.co",
-            "connect-src 'self' https://dplbfhwqbmnzmrncxain.supabase.co wss://dplbfhwqbmnzmrncxain.supabase.co",
+            `img-src 'self' data: blob: ${supabaseHttpHost}`.trim(),
+            `connect-src 'self' ${supabaseHttpHost} ${supabaseWsHost}`.trim(),
             "font-src 'self'",
             "frame-ancestors 'none'",
           ].join("; "),
