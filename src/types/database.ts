@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.4"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -58,207 +58,343 @@ export type Database = {
           },
         ]
       }
-      billboard_signals: {
+      contract_clients: {
         Row: {
-          company_name: string | null
-          contact_hint: string | null
-          created_at: string | null
-          date_found: string
-          headline: string | null
-          id: string
-          location: string | null
-          project_name: string | null
-          project_type: string | null
-          relevance_score: number | null
-          signal_id: string
-          source_url: string | null
-          status: string
-          summary: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          company_name?: string | null
-          contact_hint?: string | null
-          created_at?: string | null
-          date_found?: string
-          headline?: string | null
-          id?: string
-          location?: string | null
-          project_name?: string | null
-          project_type?: string | null
-          relevance_score?: number | null
-          signal_id: string
-          source_url?: string | null
-          status?: string
-          summary?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          company_name?: string | null
-          contact_hint?: string | null
-          created_at?: string | null
-          date_found?: string
-          headline?: string | null
-          id?: string
-          location?: string | null
-          project_name?: string | null
-          project_type?: string | null
-          relevance_score?: number | null
-          signal_id?: string
-          source_url?: string | null
-          status?: string
-          summary?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      bookings: {
-        Row: {
-          check_in: string | null
-          check_out: string | null
+          address_line: string | null
+          anonymised_at: string | null
+          city: string | null
+          consented_at: string | null
+          contact_person: string | null
           created_at: string
-          guest_id: string | null
+          default_rate_per_trip: number | null
+          email: string | null
+          fleet_id: string
           id: string
-          room_id: string | null
-          status: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          postal_code: string | null
+          province: string | null
+          updated_at: string
         }
         Insert: {
-          check_in?: string | null
-          check_out?: string | null
+          address_line?: string | null
+          anonymised_at?: string | null
+          city?: string | null
+          consented_at?: string | null
+          contact_person?: string | null
           created_at?: string
-          guest_id?: string | null
+          default_rate_per_trip?: number | null
+          email?: string | null
+          fleet_id: string
           id?: string
-          room_id?: string | null
-          status?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          updated_at?: string
         }
         Update: {
-          check_in?: string | null
-          check_out?: string | null
+          address_line?: string | null
+          anonymised_at?: string | null
+          city?: string | null
+          consented_at?: string | null
+          contact_person?: string | null
           created_at?: string
-          guest_id?: string | null
+          default_rate_per_trip?: number | null
+          email?: string | null
+          fleet_id?: string
           id?: string
-          room_id?: string | null
-          status?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          province?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "bookings_guest_id_fkey"
-            columns: ["guest_id"]
+            foreignKeyName: "contract_clients_fleet_id_fkey"
+            columns: ["fleet_id"]
             isOneToOne: false
-            referencedRelation: "guests"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bookings_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
+            referencedRelation: "fleets"
             referencedColumns: ["id"]
           },
         ]
       }
-      contacts: {
+      contract_invoices: {
         Row: {
-          call_date: string | null
-          can_afford: boolean | null
-          company_name: string | null
-          created_at: string | null
-          email: string
-          full_name: string
+          bank_account_holder: string | null
+          bank_account_number: string | null
+          bank_account_type: string | null
+          bank_branch_code: string | null
+          bank_name: string | null
+          client_id: string
+          created_at: string
+          driver_id: string | null
+          driver_name_snapshot: string | null
+          fleet_id: string
           id: string
-          message: string | null
-          phone: string
-          problem: string | null
-          recaptcha_token: string | null
-          service_type: string
-          timeline: string | null
-          website: string | null
+          invoice_date: string
+          invoice_number: string
+          notes: string | null
+          paid_amount: number | null
+          paid_at: string | null
+          sent_at: string | null
+          service_period_end: string
+          service_period_start: string
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+          vehicle_id: string | null
+          vehicle_registration_snapshot: string | null
         }
         Insert: {
-          call_date?: string | null
-          can_afford?: boolean | null
-          company_name?: string | null
-          created_at?: string | null
-          email: string
-          full_name: string
+          bank_account_holder?: string | null
+          bank_account_number?: string | null
+          bank_account_type?: string | null
+          bank_branch_code?: string | null
+          bank_name?: string | null
+          client_id: string
+          created_at?: string
+          driver_id?: string | null
+          driver_name_snapshot?: string | null
+          fleet_id: string
           id?: string
-          message?: string | null
-          phone: string
-          problem?: string | null
-          recaptcha_token?: string | null
-          service_type: string
-          timeline?: string | null
-          website?: string | null
+          invoice_date?: string
+          invoice_number: string
+          notes?: string | null
+          paid_amount?: number | null
+          paid_at?: string | null
+          sent_at?: string | null
+          service_period_end: string
+          service_period_start: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          vehicle_id?: string | null
+          vehicle_registration_snapshot?: string | null
         }
         Update: {
-          call_date?: string | null
-          can_afford?: boolean | null
-          company_name?: string | null
-          created_at?: string | null
-          email?: string
-          full_name?: string
+          bank_account_holder?: string | null
+          bank_account_number?: string | null
+          bank_account_type?: string | null
+          bank_branch_code?: string | null
+          bank_name?: string | null
+          client_id?: string
+          created_at?: string
+          driver_id?: string | null
+          driver_name_snapshot?: string | null
+          fleet_id?: string
           id?: string
-          message?: string | null
-          phone?: string
-          problem?: string | null
-          recaptcha_token?: string | null
-          service_type?: string
-          timeline?: string | null
-          website?: string | null
+          invoice_date?: string
+          invoice_number?: string
+          notes?: string | null
+          paid_amount?: number | null
+          paid_at?: string | null
+          sent_at?: string | null
+          service_period_end?: string
+          service_period_start?: string
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          vehicle_id?: string | null
+          vehicle_registration_snapshot?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contract_invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "contract_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_invoices_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_invoices_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_invoices_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      documents: {
+      contract_trips: {
         Row: {
-          content: string | null
-          embedding: string | null
-          fts: unknown
-          id: number
-          metadata: Json | null
+          amount: number
+          area: string
+          client_id: string
+          commission_amount: number | null
+          company_label: string | null
+          created_at: string
+          driver_id: string | null
+          fleet_id: string
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          pax: number | null
+          trip_date: string
+          trip_time: string | null
+          updated_at: string
+          vehicle_id: string | null
         }
         Insert: {
-          content?: string | null
-          embedding?: string | null
-          fts?: unknown
-          id?: number
-          metadata?: Json | null
+          amount: number
+          area: string
+          client_id: string
+          commission_amount?: number | null
+          company_label?: string | null
+          created_at?: string
+          driver_id?: string | null
+          fleet_id: string
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          pax?: number | null
+          trip_date: string
+          trip_time?: string | null
+          updated_at?: string
+          vehicle_id?: string | null
         }
         Update: {
-          content?: string | null
-          embedding?: string | null
-          fts?: unknown
-          id?: number
-          metadata?: Json | null
+          amount?: number
+          area?: string
+          client_id?: string
+          commission_amount?: number | null
+          company_label?: string | null
+          created_at?: string
+          driver_id?: string | null
+          fleet_id?: string
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          pax?: number | null
+          trip_date?: string
+          trip_time?: string | null
+          updated_at?: string
+          vehicle_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contract_trips_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "contract_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_trips_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_trips_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_trips_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "contract_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_trips_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      documents_pjd: {
+      driver_payouts: {
         Row: {
-          content: string | null
-          embedding: string | null
-          fts: unknown
-          id: number
-          metadata: Json | null
+          created_at: string
+          driver_id: string
+          fleet_id: string
+          id: string
+          notes: string | null
+          paid_at: string | null
+          period_end: string
+          period_start: string
+          status: string
+          total_payout: number
+          trip_count: number
+          updated_at: string
         }
         Insert: {
-          content?: string | null
-          embedding?: string | null
-          fts?: unknown
-          id?: number
-          metadata?: Json | null
+          created_at?: string
+          driver_id: string
+          fleet_id: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          period_end: string
+          period_start: string
+          status?: string
+          total_payout: number
+          trip_count: number
+          updated_at?: string
         }
         Update: {
-          content?: string | null
-          embedding?: string | null
-          fts?: unknown
-          id?: number
-          metadata?: Json | null
+          created_at?: string
+          driver_id?: string
+          fleet_id?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          period_end?: string
+          period_start?: string
+          status?: string
+          total_payout?: number
+          trip_count?: number
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "driver_payouts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_payouts_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       drivers: {
         Row: {
           anonymised_at: string | null
+          bank_account_number: string | null
+          category: Database["public"]["Enums"]["fleet_category"]
+          commission_per_trip: number | null
           consented_at: string | null
           created_at: string
           email: string | null
@@ -276,6 +412,9 @@ export type Database = {
         }
         Insert: {
           anonymised_at?: string | null
+          bank_account_number?: string | null
+          category?: Database["public"]["Enums"]["fleet_category"]
+          commission_per_trip?: number | null
           consented_at?: string | null
           created_at?: string
           email?: string | null
@@ -293,6 +432,9 @@ export type Database = {
         }
         Update: {
           anonymised_at?: string | null
+          bank_account_number?: string | null
+          category?: Database["public"]["Enums"]["fleet_category"]
+          commission_per_trip?: number | null
           consented_at?: string | null
           created_at?: string
           email?: string | null
@@ -318,124 +460,64 @@ export type Database = {
           },
         ]
       }
-      ebook_purchases: {
+      fleet_invites: {
         Row: {
-          amount_fee: number | null
-          amount_gross: number
-          amount_net: number | null
-          created_at: string | null
-          custom_int1: number | null
-          custom_str1: string | null
-          custom_str2: string | null
-          download_count: number | null
-          download_expires_at: string | null
-          download_url: string | null
-          email_address: string
+          accepted_at: string | null
+          created_at: string
+          email: string
+          fleet_id: string
           id: string
-          ip_address: string | null
-          item_description: string | null
-          item_name: string
-          merchant_id: string | null
-          name_first: string | null
-          name_last: string | null
-          payment_status: string
-          pf_payment_id: string
+          invited_by: string | null
+          role: string
         }
         Insert: {
-          amount_fee?: number | null
-          amount_gross: number
-          amount_net?: number | null
-          created_at?: string | null
-          custom_int1?: number | null
-          custom_str1?: string | null
-          custom_str2?: string | null
-          download_count?: number | null
-          download_expires_at?: string | null
-          download_url?: string | null
-          email_address: string
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          fleet_id: string
           id?: string
-          ip_address?: string | null
-          item_description?: string | null
-          item_name: string
-          merchant_id?: string | null
-          name_first?: string | null
-          name_last?: string | null
-          payment_status?: string
-          pf_payment_id: string
+          invited_by?: string | null
+          role?: string
         }
         Update: {
-          amount_fee?: number | null
-          amount_gross?: number
-          amount_net?: number | null
-          created_at?: string | null
-          custom_int1?: number | null
-          custom_str1?: string | null
-          custom_str2?: string | null
-          download_count?: number | null
-          download_expires_at?: string | null
-          download_url?: string | null
-          email_address?: string
-          id?: string
-          ip_address?: string | null
-          item_description?: string | null
-          item_name?: string
-          merchant_id?: string | null
-          name_first?: string | null
-          name_last?: string | null
-          payment_status?: string
-          pf_payment_id?: string
-        }
-        Relationships: []
-      }
-      email_subscribers: {
-        Row: {
-          created_at: string | null
-          email: string
-          id: string
-          last_emailed_at: string | null
-          name: string | null
-          source: string
-          status: string
-          tags: string[] | null
-          utm_campaign: string | null
-          utm_medium: string | null
-          utm_source: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          id?: string
-          last_emailed_at?: string | null
-          name?: string | null
-          source?: string
-          status?: string
-          tags?: string[] | null
-          utm_campaign?: string | null
-          utm_medium?: string | null
-          utm_source?: string | null
-        }
-        Update: {
-          created_at?: string | null
+          accepted_at?: string | null
+          created_at?: string
           email?: string
+          fleet_id?: string
           id?: string
-          last_emailed_at?: string | null
-          name?: string | null
-          source?: string
-          status?: string
-          tags?: string[] | null
-          utm_campaign?: string | null
-          utm_medium?: string | null
-          utm_source?: string | null
+          invited_by?: string | null
+          role?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fleet_invites_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fleet_settings: {
         Row: {
           alert_days_threshold: number
           alert_km_threshold: number
+          bank_account_holder: string | null
+          bank_account_number: string | null
+          bank_account_type: string | null
+          bank_branch_code: string | null
+          bank_name: string | null
+          company_address_line: string | null
+          company_city: string | null
+          company_email: string | null
+          company_name: string | null
+          company_phone: string | null
+          company_postal_code: string | null
+          company_province: string | null
           created_at: string
           fleet_id: string
           id: string
+          next_invoice_number: number
           notification_email: boolean
           notification_in_app: boolean
           notification_telegram: boolean
@@ -448,9 +530,22 @@ export type Database = {
         Insert: {
           alert_days_threshold?: number
           alert_km_threshold?: number
+          bank_account_holder?: string | null
+          bank_account_number?: string | null
+          bank_account_type?: string | null
+          bank_branch_code?: string | null
+          bank_name?: string | null
+          company_address_line?: string | null
+          company_city?: string | null
+          company_email?: string | null
+          company_name?: string | null
+          company_phone?: string | null
+          company_postal_code?: string | null
+          company_province?: string | null
           created_at?: string
           fleet_id: string
           id?: string
+          next_invoice_number?: number
           notification_email?: boolean
           notification_in_app?: boolean
           notification_telegram?: boolean
@@ -463,9 +558,22 @@ export type Database = {
         Update: {
           alert_days_threshold?: number
           alert_km_threshold?: number
+          bank_account_holder?: string | null
+          bank_account_number?: string | null
+          bank_account_type?: string | null
+          bank_branch_code?: string | null
+          bank_name?: string | null
+          company_address_line?: string | null
+          company_city?: string | null
+          company_email?: string | null
+          company_name?: string | null
+          company_phone?: string | null
+          company_postal_code?: string | null
+          company_province?: string | null
           created_at?: string
           fleet_id?: string
           id?: string
+          next_invoice_number?: number
           notification_email?: boolean
           notification_in_app?: boolean
           notification_telegram?: boolean
@@ -562,81 +670,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      guests: {
-        Row: {
-          created_at: string
-          email: string | null
-          first_name: string | null
-          id: string
-          last_name: string | null
-          phone: string | null
-        }
-        Insert: {
-          created_at?: string
-          email?: string | null
-          first_name?: string | null
-          id?: string
-          last_name?: string | null
-          phone?: string | null
-        }
-        Update: {
-          created_at?: string
-          email?: string | null
-          first_name?: string | null
-          id?: string
-          last_name?: string | null
-          phone?: string | null
-        }
-        Relationships: []
-      }
-      launch_pipeline: {
-        Row: {
-          converted_at: string | null
-          created_at: string | null
-          email: string
-          first_touch_at: string | null
-          id: string
-          notes: string | null
-          revenue: number | null
-          source: string | null
-          stage: string
-          updated_at: string | null
-          utm_campaign: string | null
-          utm_medium: string | null
-          utm_source: string | null
-        }
-        Insert: {
-          converted_at?: string | null
-          created_at?: string | null
-          email: string
-          first_touch_at?: string | null
-          id?: string
-          notes?: string | null
-          revenue?: number | null
-          source?: string | null
-          stage: string
-          updated_at?: string | null
-          utm_campaign?: string | null
-          utm_medium?: string | null
-          utm_source?: string | null
-        }
-        Update: {
-          converted_at?: string | null
-          created_at?: string | null
-          email?: string
-          first_touch_at?: string | null
-          id?: string
-          notes?: string | null
-          revenue?: number | null
-          source?: string | null
-          stage?: string
-          updated_at?: string | null
-          utm_campaign?: string | null
-          utm_medium?: string | null
-          utm_source?: string | null
-        }
-        Relationships: []
       }
       maintenance_event_types: {
         Row: {
@@ -834,63 +867,6 @@ export type Database = {
           },
         ]
       }
-      matters: {
-        Row: {
-          active: boolean | null
-          attorney_name: string | null
-          client_email: string | null
-          client_name: string | null
-          client_whatsapp: string | null
-          created_at: string | null
-          id: string
-          matter_ref: string
-          preferred_channel: string | null
-          property_address: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          attorney_name?: string | null
-          client_email?: string | null
-          client_name?: string | null
-          client_whatsapp?: string | null
-          created_at?: string | null
-          id?: string
-          matter_ref: string
-          preferred_channel?: string | null
-          property_address?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          attorney_name?: string | null
-          client_email?: string | null
-          client_name?: string | null
-          client_whatsapp?: string | null
-          created_at?: string | null
-          id?: string
-          matter_ref?: string
-          preferred_channel?: string | null
-          property_address?: string | null
-        }
-        Relationships: []
-      }
-      n8n_chat_histories: {
-        Row: {
-          id: number
-          message: Json
-          session_id: string
-        }
-        Insert: {
-          id?: number
-          message: Json
-          session_id: string
-        }
-        Update: {
-          id?: number
-          message?: Json
-          session_id?: string
-        }
-        Relationships: []
-      }
       notifications: {
         Row: {
           created_at: string
@@ -997,150 +973,6 @@ export type Database = {
           },
         ]
       }
-      pjd_chat_sessions: {
-        Row: {
-          created_at: string | null
-          id: string
-          lead_captured: boolean | null
-          messages: Json | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          lead_captured?: boolean | null
-          messages?: Json | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          lead_captured?: boolean | null
-          messages?: Json | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      pjd_leads: {
-        Row: {
-          board_type: string | null
-          budget: string | null
-          created_at: string | null
-          email: string
-          fin_setup: string | null
-          glass_job: string | null
-          height_cm: string | null
-          id: string
-          interest: string | null
-          length_board: string | null
-          message: string | null
-          name: string
-          notes: string | null
-          phone: string | null
-          source: string | null
-          status: string | null
-          thickness_board: string | null
-          updated_at: string | null
-          wave_type: string | null
-          weight_kg: string | null
-          width_board: string | null
-        }
-        Insert: {
-          board_type?: string | null
-          budget?: string | null
-          created_at?: string | null
-          email: string
-          fin_setup?: string | null
-          glass_job?: string | null
-          height_cm?: string | null
-          id?: string
-          interest?: string | null
-          length_board?: string | null
-          message?: string | null
-          name: string
-          notes?: string | null
-          phone?: string | null
-          source?: string | null
-          status?: string | null
-          thickness_board?: string | null
-          updated_at?: string | null
-          wave_type?: string | null
-          weight_kg?: string | null
-          width_board?: string | null
-        }
-        Update: {
-          board_type?: string | null
-          budget?: string | null
-          created_at?: string | null
-          email?: string
-          fin_setup?: string | null
-          glass_job?: string | null
-          height_cm?: string | null
-          id?: string
-          interest?: string | null
-          length_board?: string | null
-          message?: string | null
-          name?: string
-          notes?: string | null
-          phone?: string | null
-          source?: string | null
-          status?: string | null
-          thickness_board?: string | null
-          updated_at?: string | null
-          wave_type?: string | null
-          weight_kg?: string | null
-          width_board?: string | null
-        }
-        Relationships: []
-      }
-      pjd_stock_boards: {
-        Row: {
-          condition: string | null
-          created_at: string | null
-          description: string | null
-          dimensions: string | null
-          featured: boolean | null
-          id: string
-          image_urls: string[] | null
-          length_ft: string | null
-          name: string
-          price: number | null
-          sold: boolean | null
-          thickness_in: string | null
-          width_in: string | null
-        }
-        Insert: {
-          condition?: string | null
-          created_at?: string | null
-          description?: string | null
-          dimensions?: string | null
-          featured?: boolean | null
-          id?: string
-          image_urls?: string[] | null
-          length_ft?: string | null
-          name: string
-          price?: number | null
-          sold?: boolean | null
-          thickness_in?: string | null
-          width_in?: string | null
-        }
-        Update: {
-          condition?: string | null
-          created_at?: string | null
-          description?: string | null
-          dimensions?: string | null
-          featured?: boolean | null
-          id?: string
-          image_urls?: string[] | null
-          length_ft?: string | null
-          name?: string
-          price?: number | null
-          sold?: boolean | null
-          thickness_in?: string | null
-          width_in?: string | null
-        }
-        Relationships: []
-      }
       profiles_fleet: {
         Row: {
           created_at: string
@@ -1175,140 +1007,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      record_manager: {
-        Row: {
-          created_at: string
-          data_type: string | null
-          doc_id: string
-          document_title: string | null
-          hash: string
-          id: number
-          schema: string | null
-        }
-        Insert: {
-          created_at?: string
-          data_type?: string | null
-          doc_id: string
-          document_title?: string | null
-          hash: string
-          id?: number
-          schema?: string | null
-        }
-        Update: {
-          created_at?: string
-          data_type?: string | null
-          doc_id?: string
-          document_title?: string | null
-          hash?: string
-          id?: number
-          schema?: string | null
-        }
-        Relationships: []
-      }
-      record_manager_pjd: {
-        Row: {
-          created_at: string
-          doc_id: string
-          hash: string
-          id: number
-        }
-        Insert: {
-          created_at?: string
-          doc_id: string
-          hash: string
-          id?: number
-        }
-        Update: {
-          created_at?: string
-          doc_id?: string
-          hash?: string
-          id?: number
-        }
-        Relationships: []
-      }
-      report_runs: {
-        Row: {
-          approved: boolean | null
-          approved_by: string | null
-          created_at: string | null
-          delivery_channel: string | null
-          extracted_json: Json | null
-          id: string
-          matter_id: string | null
-          raw_source_url: string | null
-          report_pdf_url: string | null
-          run_date: string
-          sent_at: string | null
-          status: string | null
-        }
-        Insert: {
-          approved?: boolean | null
-          approved_by?: string | null
-          created_at?: string | null
-          delivery_channel?: string | null
-          extracted_json?: Json | null
-          id?: string
-          matter_id?: string | null
-          raw_source_url?: string | null
-          report_pdf_url?: string | null
-          run_date: string
-          sent_at?: string | null
-          status?: string | null
-        }
-        Update: {
-          approved?: boolean | null
-          approved_by?: string | null
-          created_at?: string | null
-          delivery_channel?: string | null
-          extracted_json?: Json | null
-          id?: string
-          matter_id?: string | null
-          raw_source_url?: string | null
-          report_pdf_url?: string | null
-          run_date?: string
-          sent_at?: string | null
-          status?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "report_runs_matter_id_fkey"
-            columns: ["matter_id"]
-            isOneToOne: false
-            referencedRelation: "matters"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      rooms: {
-        Row: {
-          capacity: number
-          created_at: string
-          description: string | null
-          id: string
-          name: string
-          price_per_night: number
-          size_sqm: number | null
-        }
-        Insert: {
-          capacity: number
-          created_at?: string
-          description?: string | null
-          id?: string
-          name: string
-          price_per_night: number
-          size_sqm?: number | null
-        }
-        Update: {
-          capacity?: number
-          created_at?: string
-          description?: string | null
-          id?: string
-          name?: string
-          price_per_night?: number
-          size_sqm?: number | null
-        }
-        Relationships: []
       }
       service_schedules: {
         Row: {
@@ -1425,35 +1123,6 @@ export type Database = {
             columns: ["fleet_id"]
             isOneToOne: false
             referencedRelation: "fleets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      tabular_document_rows: {
-        Row: {
-          created_at: string
-          id: number
-          record_manager_id: number | null
-          row_data: Json | null
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-          record_manager_id?: number | null
-          row_data?: Json | null
-        }
-        Update: {
-          created_at?: string
-          id?: number
-          record_manager_id?: number | null
-          row_data?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "tabular_document_rows_record_manager_id_fkey"
-            columns: ["record_manager_id"]
-            isOneToOne: false
-            referencedRelation: "record_manager"
             referencedColumns: ["id"]
           },
         ]
@@ -1575,6 +1244,7 @@ export type Database = {
       }
       vehicles: {
         Row: {
+          category: Database["public"]["Enums"]["fleet_category"]
           color: string | null
           created_at: string
           currency: Database["public"]["Enums"]["currency_code"]
@@ -1602,6 +1272,7 @@ export type Database = {
           year: number | null
         }
         Insert: {
+          category?: Database["public"]["Enums"]["fleet_category"]
           color?: string | null
           created_at?: string
           currency?: Database["public"]["Enums"]["currency_code"]
@@ -1629,6 +1300,7 @@ export type Database = {
           year?: number | null
         }
         Update: {
+          category?: Database["public"]["Enums"]["fleet_category"]
           color?: string | null
           created_at?: string
           currency?: Database["public"]["Enums"]["currency_code"]
@@ -1665,197 +1337,21 @@ export type Database = {
           },
         ]
       }
-      website_demo: {
-        Row: {
-          company_name: string | null
-          created_at: string | null
-          full_name: string | null
-          id: number
-          job_title: string | null
-          niche: string | null
-          recaptcha_token: string | null
-          summary: string | null
-        }
-        Insert: {
-          company_name?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: number
-          job_title?: string | null
-          niche?: string | null
-          recaptcha_token?: string | null
-          summary?: string | null
-        }
-        Update: {
-          company_name?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: number
-          job_title?: string | null
-          niche?: string | null
-          recaptcha_token?: string | null
-          summary?: string | null
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      check_incoming_booking: { Args: never; Returns: undefined }
-      create_profile: {
-        Args: {
-          user_email: string
-          user_full_name: string
-          user_id: string
-          user_role: Database["public"]["Enums"]["user_role"]
-        }
-        Returns: undefined
+      is_fleet_owner_or_admin: {
+        Args: { target_fleet_id: string }
+        Returns: boolean
       }
-      get_available_rooms: {
-        Args: { requested_check_in: string; requested_guests: number }
-        Returns: {
-          capacity: number
-          description: string
-          price: number
-          room_name: string
-        }[]
-      }
-      get_purchase_counts: {
-        Args: never
-        Returns: {
-          item_name: string
-          purchase_count: number
-        }[]
-      }
-      hybrid_search_pjd: {
-        Args: {
-          filter?: Json
-          full_text_weight?: number
-          match_count?: number
-          query_embedding: string
-          query_text: string
-          rrf_k?: number
-          semantic_weight?: number
-        }
-        Returns: {
-          content: string
-          fts_rank: number
-          hybrid_score: number
-          id: number
-          metadata: Json
-          similarity: number
-        }[]
-      }
-      hybrid_search_pjd_with_details: {
-        Args: {
-          filter?: Json
-          match_count?: number
-          query_embedding: string
-          query_text: string
-          rrf_k?: number
-        }
-        Returns: {
-          combined_score: number
-          content: string
-          id: number
-          keyword_rank: number
-          keyword_score: number
-          metadata: Json
-          vector_rank: number
-          vector_score: number
-        }[]
-      }
-      hybrid_search_v2: {
-        Args: {
-          filter?: Json
-          full_text_weight?: number
-          match_count?: number
-          query_embedding: string
-          query_text: string
-          rrf_k?: number
-          semantic_weight?: number
-        }
-        Returns: {
-          content: string
-          fts_rank: number
-          hybrid_score: number
-          id: number
-          metadata: Json
-          similarity: number
-        }[]
-      }
-      insert_signal_if_new: {
-        Args: {
-          p_company_name: string
-          p_contact_hint: string
-          p_date_found: string
-          p_location: string
-          p_project_name: string
-          p_project_type: string
-          p_relevance_score: number
-          p_signal_id: string
-          p_source_url: string
-          p_summary: string
-        }
-        Returns: {
-          company_name: string | null
-          contact_hint: string | null
-          created_at: string | null
-          date_found: string
-          headline: string | null
-          id: string
-          location: string | null
-          project_name: string | null
-          project_type: string | null
-          relevance_score: number | null
-          signal_id: string
-          source_url: string | null
-          status: string
-          summary: string | null
-          updated_at: string | null
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "billboard_signals"
-          isOneToOne: false
-          isSetofReturn: true
-        }
-      }
-      keyword_search_pjd: {
-        Args: { filter?: Json; match_count?: number; query_text: string }
-        Returns: {
-          content: string
-          id: number
-          metadata: Json
-          rank: number
-        }[]
-      }
-      match_documents_pjd: {
-        Args: { filter?: Json; match_count?: number; query_embedding: string }
-        Returns: {
-          content: string
-          id: number
-          metadata: Json
-          similarity: number
-        }[]
-      }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
       user_fleet_ids: { Args: never; Returns: string[] }
     }
     Enums: {
-      booking_status:
-        | "pending"
-        | "accepted"
-        | "rejected"
-        | "en_route"
-        | "in_progress"
-        | "completed"
-        | "cancelled"
       currency_code: "ZAR" | "USD" | "EUR" | "GBP"
       driver_status: "active" | "inactive" | "suspended"
+      fleet_category: "uber" | "contract"
       line_item_type: "parts" | "labour" | "consumable" | "other"
       maintenance_category:
         | "routine"
@@ -1871,7 +1367,6 @@ export type Database = {
         | "sync_failure"
         | "custom"
       odometer_source: "service" | "fuel_log" | "manual" | "uber_sync"
-      user_role: "client" | "tradesman"
       vehicle_status: "active" | "maintenance" | "retired" | "sold"
     }
     CompositeTypes: {
@@ -2000,17 +1495,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      booking_status: [
-        "pending",
-        "accepted",
-        "rejected",
-        "en_route",
-        "in_progress",
-        "completed",
-        "cancelled",
-      ],
       currency_code: ["ZAR", "USD", "EUR", "GBP"],
       driver_status: ["active", "inactive", "suspended"],
+      fleet_category: ["uber", "contract"],
       line_item_type: ["parts", "labour", "consumable", "other"],
       maintenance_category: [
         "routine",
@@ -2028,13 +1515,16 @@ export const Constants = {
         "custom",
       ],
       odometer_source: ["service", "fuel_log", "manual", "uber_sync"],
-      user_role: ["client", "tradesman"],
       vehicle_status: ["active", "maintenance", "retired", "sold"],
     },
   },
 } as const
 
-// Invoice AI parsing types
+// ============================================================
+// Custom types and convenience aliases
+// ============================================================
+
+// Invoice AI parsing types (used by maintenance invoice upload)
 export interface ParsedInvoiceLineItem {
   description: string
   item_type: LineItemType
@@ -2061,30 +1551,40 @@ export interface ParsedInvoice {
   confidence: number
 }
 
-// Convenience types
-export type Fleet = Tables<"fleets">;
-export type ProfileFleet = Tables<"profiles_fleet">;
-export type FleetSettings = Tables<"fleet_settings">;
-export type AuditLog = Tables<"audit_logs">;
-export type Vehicle = Tables<"vehicles">;
-export type Driver = Tables<"drivers">;
-export type VehicleDriverAssignment = Tables<"vehicle_driver_assignments">;
-export type Supplier = Tables<"suppliers">;
-export type MaintenanceEventType = Tables<"maintenance_event_types">;
-export type MaintenanceEvent = Tables<"maintenance_events">;
-export type MaintenanceLineItem = Tables<"maintenance_line_items">;
-export type OdometerReading = Tables<"odometer_readings">;
-export type UberTripData = Tables<"uber_trip_data">;
-export type FuelLog = Tables<"fuel_logs">;
-export type ServiceSchedule = Tables<"service_schedules">;
-export type Notification = Tables<"notifications">;
+// Convenience Row types
+export type Fleet = Tables<"fleets">
+export type ProfileFleet = Tables<"profiles_fleet">
+export type FleetSettings = Tables<"fleet_settings">
+export type FleetInvite = Tables<"fleet_invites">
+export type AuditLog = Tables<"audit_logs">
+export type Vehicle = Tables<"vehicles">
+export type Driver = Tables<"drivers">
+export type VehicleDriverAssignment = Tables<"vehicle_driver_assignments">
+export type Supplier = Tables<"suppliers">
+export type MaintenanceEventType = Tables<"maintenance_event_types">
+export type MaintenanceEvent = Tables<"maintenance_events">
+export type MaintenanceLineItem = Tables<"maintenance_line_items">
+export type OdometerReading = Tables<"odometer_readings">
+export type UberTripData = Tables<"uber_trip_data">
+export type FuelLog = Tables<"fuel_logs">
+export type ServiceSchedule = Tables<"service_schedules">
+export type Notification = Tables<"notifications">
+
+// Contract fleet aliases
+export type ContractClient = Tables<"contract_clients">
+export type ContractInvoice = Tables<"contract_invoices">
+export type ContractTrip = Tables<"contract_trips">
+export type DriverPayout = Tables<"driver_payouts">
 
 // Enum types
-export type VehicleStatus = Database["public"]["Enums"]["vehicle_status"];
-export type DriverStatus = Database["public"]["Enums"]["driver_status"];
-export type MaintenanceCategory = Database["public"]["Enums"]["maintenance_category"];
-export type LineItemType = Database["public"]["Enums"]["line_item_type"];
-export type OdometerSource = Database["public"]["Enums"]["odometer_source"];
-export type NotificationType = Database["public"]["Enums"]["notification_type"];
-export type CurrencyCode = Database["public"]["Enums"]["currency_code"];
+export type FleetCategory = Database["public"]["Enums"]["fleet_category"]
+export type VehicleStatus = Database["public"]["Enums"]["vehicle_status"]
+export type DriverStatus = Database["public"]["Enums"]["driver_status"]
+export type MaintenanceCategory = Database["public"]["Enums"]["maintenance_category"]
+export type LineItemType = Database["public"]["Enums"]["line_item_type"]
+export type OdometerSource = Database["public"]["Enums"]["odometer_source"]
+export type NotificationType = Database["public"]["Enums"]["notification_type"]
+export type CurrencyCode = Database["public"]["Enums"]["currency_code"]
 
+// Role helpers
+export type FleetRole = "owner" | "admin" | "member"

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useFleet } from "@/contexts/fleet-context";
 import { PageHeader } from "@/components/shared/page-header";
+import { OwnerOnlyGuard } from "@/components/shared/owner-only-guard";
 import { DataTable, type ColumnDef } from "@/components/shared/data-table";
 import { BatchFuelForm } from "@/components/fuel/batch-fuel-form";
 
@@ -65,6 +66,14 @@ const columns: ColumnDef<Record<string, unknown>>[] = [
 ];
 
 export default function FuelPage() {
+  return (
+    <OwnerOnlyGuard>
+      <FuelPageContent />
+    </OwnerOnlyGuard>
+  );
+}
+
+function FuelPageContent() {
   const { fleetId } = useFleet();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [logs, setLogs] = useState<FuelLogRow[]>([]);

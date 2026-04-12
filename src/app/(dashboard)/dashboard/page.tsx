@@ -20,7 +20,7 @@ const zarFormat = new Intl.NumberFormat("en-ZA", {
 });
 
 export default function DashboardPage() {
-  const { fleetId } = useFleet();
+  const { fleetId, isOwnerOrAdmin } = useFleet();
   const [loading, setLoading] = useState(true);
   const [activeVehicles, setActiveVehicles] = useState(0);
   const [totalVehicles, setTotalVehicles] = useState(0);
@@ -104,22 +104,26 @@ export default function DashboardPage() {
           subtitle={`${totalVehicles} total`}
           loading={loading}
         />
-        <KPICard
-          title="Maintenance Spend MTD"
-          value={zarFormat.format(maintenanceSpend)}
-          icon={Wrench}
-          color="destructive"
-          subtitle="This month"
-          loading={loading}
-        />
-        <KPICard
-          title="Uber Revenue MTD"
-          value={zarFormat.format(uberRevenue)}
-          icon={DollarSign}
-          color="success"
-          subtitle="This month"
-          loading={loading}
-        />
+        {isOwnerOrAdmin && (
+          <>
+            <KPICard
+              title="Maintenance Spend MTD"
+              value={zarFormat.format(maintenanceSpend)}
+              icon={Wrench}
+              color="destructive"
+              subtitle="This month"
+              loading={loading}
+            />
+            <KPICard
+              title="Uber Revenue MTD"
+              value={zarFormat.format(uberRevenue)}
+              icon={DollarSign}
+              color="success"
+              subtitle="This month"
+              loading={loading}
+            />
+          </>
+        )}
         <KPICard
           title="Fleet Km MTD"
           value={Math.round(fleetKm)}
@@ -130,10 +134,12 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <RevenueChart />
-        <CategoryDonut />
-      </div>
+      {isOwnerOrAdmin && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <RevenueChart />
+          <CategoryDonut />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <RecentMaintenance />
