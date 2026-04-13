@@ -40,11 +40,19 @@ const navItems = [
   { label: "Settings", icon: Settings, href: "/settings", ownerOnly: false },
 ];
 
+const driverNavItems = [
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { label: "Fuel Log", icon: Fuel, href: "/fuel" },
+  { label: "Contract Trips", icon: Briefcase, href: "/contract/trips" },
+];
+
 export function AppSidebar() {
   const pathname = usePathname();
-  const { isOwnerOrAdmin } = useFleet();
+  const { isOwnerOrAdmin, isDriver } = useFleet();
 
-  const visibleItems = navItems.filter((item) => isOwnerOrAdmin || !item.ownerOnly);
+  const visibleItems = isDriver
+    ? driverNavItems
+    : navItems.filter((item) => isOwnerOrAdmin || !item.ownerOnly);
 
   return (
     <Sidebar className="border-r-0">

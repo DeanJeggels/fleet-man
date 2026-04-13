@@ -1,6 +1,6 @@
 "use client";
 
-import { Wifi, Bell, Send, List, Gauge, Building2, Users } from "lucide-react";
+import { Wifi, Bell, Send, List, Gauge, Building2, Users, BadgeCheck } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { UberApiTab } from "@/components/settings/uber-api-tab";
@@ -11,6 +11,7 @@ import { EventTypesTab } from "@/components/settings/event-types-tab";
 import { AlertThresholdsTab } from "@/components/settings/alert-thresholds-tab";
 import { CompanyProfileTab } from "@/components/settings/company-profile-tab";
 import { TeamMembersTab } from "@/components/settings/team-members-tab";
+import { DriverAccountsTab } from "@/components/settings/driver-accounts-tab";
 import { useFleet } from "@/contexts/fleet-context";
 
 export default function SettingsPage() {
@@ -46,28 +47,33 @@ export default function SettingsPage() {
             <span className="hidden sm:inline">Team Members</span>
           </TabsTrigger>
           <TabsTrigger value={2} className="snap-start shrink-0">
-            <Wifi className="size-4" />
-            Uber API
+            <BadgeCheck className="size-4" />
+            <span className="sm:hidden">Drivers</span>
+            <span className="hidden sm:inline">Driver Accounts</span>
           </TabsTrigger>
           <TabsTrigger value={3} className="snap-start shrink-0">
             <Wifi className="size-4" />
-            Bolt API
+            Uber API
           </TabsTrigger>
           <TabsTrigger value={4} className="snap-start shrink-0">
+            <Wifi className="size-4" />
+            Bolt API
+          </TabsTrigger>
+          <TabsTrigger value={5} className="snap-start shrink-0">
             <Bell className="size-4" />
             <span className="sm:hidden">Notify</span>
             <span className="hidden sm:inline">Notifications</span>
           </TabsTrigger>
-          <TabsTrigger value={5} className="snap-start shrink-0">
+          <TabsTrigger value={6} className="snap-start shrink-0">
             <Send className="size-4" />
             Telegram
           </TabsTrigger>
-          <TabsTrigger value={6} className="snap-start shrink-0">
+          <TabsTrigger value={7} className="snap-start shrink-0">
             <List className="size-4" />
             <span className="sm:hidden">Events</span>
             <span className="hidden sm:inline">Event Types</span>
           </TabsTrigger>
-          <TabsTrigger value={7} className="snap-start shrink-0">
+          <TabsTrigger value={8} className="snap-start shrink-0">
             <Gauge className="size-4" />
             <span className="sm:hidden">Alerts</span>
             <span className="hidden sm:inline">Alert Thresholds</span>
@@ -81,21 +87,24 @@ export default function SettingsPage() {
           <TeamMembersTab />
         </TabsContent>
         <TabsContent value={2} className="mt-4">
-          <UberApiTab />
+          <DriverAccountsTab />
         </TabsContent>
         <TabsContent value={3} className="mt-4">
-          <BoltApiTab />
+          <UberApiTab />
         </TabsContent>
         <TabsContent value={4} className="mt-4">
-          <NotificationsTab />
+          <BoltApiTab />
         </TabsContent>
         <TabsContent value={5} className="mt-4">
-          <TelegramTab />
+          <NotificationsTab />
         </TabsContent>
         <TabsContent value={6} className="mt-4">
-          <EventTypesTab />
+          <TelegramTab />
         </TabsContent>
         <TabsContent value={7} className="mt-4">
+          <EventTypesTab />
+        </TabsContent>
+        <TabsContent value={8} className="mt-4">
           <AlertThresholdsTab />
         </TabsContent>
       </Tabs>

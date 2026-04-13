@@ -72,6 +72,7 @@ function ContractTripsContent() {
       {
         key: "trip_time",
         header: "Time",
+        sortable: true,
         render: (row) => row.trip_time ?? "",
       },
       {
@@ -94,6 +95,11 @@ function ContractTripsContent() {
         key: "company_label",
         header: "Company",
         render: (row) => row.company_label ?? "—",
+      },
+      {
+        key: "coordinator",
+        header: "Co-ordinator",
+        render: (row) => row.coordinator ?? "—",
       },
       { key: "area", header: "Area" },
       { key: "pax", header: "Pax", render: (row) => row.pax ?? "—" },

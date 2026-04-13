@@ -8,22 +8,27 @@ interface FleetContextValue {
   fleetId: string | null
   role: FleetRole | null
   displayName: string | null
+  driverId: string | null
   loading: boolean
   isOwnerOrAdmin: boolean
+  isDriver: boolean
 }
 
 const FleetContext = createContext<FleetContextValue>({
   fleetId: null,
   role: null,
   displayName: null,
+  driverId: null,
   loading: true,
   isOwnerOrAdmin: false,
+  isDriver: false,
 })
 
 export function FleetProvider({ children }: { children: ReactNode }) {
   const [fleetId, setFleetId] = useState<string | null>(null)
   const [role, setRole] = useState<FleetRole | null>(null)
   const [displayName, setDisplayName] = useState<string | null>(null)
+  const [driverId, setDriverId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -39,6 +44,7 @@ export function FleetProvider({ children }: { children: ReactNode }) {
           setFleetId(null)
           setRole(null)
           setDisplayName(null)
+          setDriverId(null)
           setLoading(false)
         }
         return
@@ -46,7 +52,7 @@ export function FleetProvider({ children }: { children: ReactNode }) {
 
       const { data, error } = await supabase
         .from("profiles_fleet")
-        .select("fleet_id, role, display_name")
+        .select("fleet_id, role, display_name, driver_id")
         .eq("user_id", user.id)
         .maybeSingle()
 
@@ -63,10 +69,12 @@ export function FleetProvider({ children }: { children: ReactNode }) {
         setFleetId(data.fleet_id)
         setRole(data.role as FleetRole)
         setDisplayName(data.display_name)
+        setDriverId(data.driver_id)
       } else {
         setFleetId(null)
         setRole(null)
         setDisplayName(null)
+        setDriverId(null)
       }
       setLoading(false)
     }
@@ -96,9 +104,10 @@ export function FleetProvider({ children }: { children: ReactNode }) {
   }
 
   const isOwnerOrAdmin = role === "owner" || role === "admin"
+  const isDriver = role === "driver"
 
   return (
-    <FleetContext.Provider value={{ fleetId, role, displayName, loading, isOwnerOrAdmin }}>
+    <FleetContext.Provider value={{ fleetId, role, displayName, driverId, loading, isOwnerOrAdmin, isDriver }}>
       {children}
     </FleetContext.Provider>
   )

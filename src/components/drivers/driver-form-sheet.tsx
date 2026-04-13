@@ -6,7 +6,7 @@ import { useFleet } from "@/contexts/fleet-context";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import type { Driver, DriverStatus, FleetCategory } from "@/types/database";
+import type { Driver, DriverStatus, FleetCategory, Vehicle } from "@/types/database";
 
 import {
   Sheet,
@@ -75,6 +75,9 @@ export function DriverFormSheet({
   const [uberDriverId, setUberDriverId] = useState("");
   const [notes, setNotes] = useState("");
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [assignedVehicleId, setAssignedVehicleId] = useState<string>("");
+  const [initialVehicleId, setInitialVehicleId] = useState<string>("");
 
   useEffect(() => {
     if (driver) {
@@ -104,8 +107,49 @@ export function DriverFormSheet({
       setUberDriverId("");
       setNotes("");
       setConsented(false);
+      setAssignedVehicleId("");
+      setInitialVehicleId("");
     }
   }, [driver, open]);
+
+  useEffect(() => {
+    if (!open || !fleetId) return;
+    async function loadVehicles() {
+      const { data } = await supabase
+        .from("vehicles")
+        .select("*")
+        .eq("fleet_id", fleetId!)
+        .eq("category", category)
+        .order("registration");
+      setVehicles((data ?? []) as Vehicle[]);
+    }
+    loadVehicles();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, fleetId, category]);
+
+  useEffect(() => {
+    if (!open || !driver || !fleetId) {
+      if (!driver) {
+        setAssignedVehicleId("");
+        setInitialVehicleId("");
+      }
+      return;
+    }
+    async function loadCurrentAssignment() {
+      const { data } = await supabase
+        .from("vehicle_driver_assignments")
+        .select("vehicle_id")
+        .eq("driver_id", driver!.id)
+        .eq("fleet_id", fleetId!)
+        .is("unassigned_at", null)
+        .maybeSingle();
+      const vid = data?.vehicle_id ?? "";
+      setAssignedVehicleId(vid);
+      setInitialVehicleId(vid);
+    }
+    loadCurrentAssignment();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, driver, fleetId]);
 
   async function handleSave() {
     if (!firstName || !lastName || !licenseNumber || !licenseExpiry) {
@@ -145,6 +189,7 @@ export function DriverFormSheet({
     };
 
     let error;
+    let savedDriverId: string | null = driver?.id ?? null;
     if (isEdit && driver) {
       ({ error } = await supabase
         .from("drivers")
@@ -152,17 +197,74 @@ export function DriverFormSheet({
         .eq("id", driver.id)
         .eq("fleet_id", fleetId!));
     } else {
-      ({ error } = await supabase.from("drivers").insert({ ...payload, fleet_id: fleetId!, consented_at: new Date().toISOString() }));
+      const { data: inserted, error: insertError } = await supabase
+        .from("drivers")
+        .insert({ ...payload, fleet_id: fleetId!, consented_at: new Date().toISOString() })
+        .select("id")
+        .single();
+      error = insertError;
+      savedDriverId = inserted?.id ?? null;
     }
-
-    setSaving(false);
 
     if (error) {
       console.error(error);
       toast.error("Something went wrong. Please try again.");
+      setSaving(false);
       return;
     }
 
+    // Handle vehicle assignment swap if changed
+    if (savedDriverId && assignedVehicleId !== initialVehicleId) {
+      const nowIso = new Date().toISOString();
+
+      if (initialVehicleId) {
+        const { error: unassignError } = await supabase
+          .from("vehicle_driver_assignments")
+          .update({ unassigned_at: nowIso })
+          .eq("driver_id", savedDriverId)
+          .eq("fleet_id", fleetId!)
+          .is("unassigned_at", null);
+        if (unassignError) {
+          console.error(unassignError);
+          toast.error("Driver saved, but could not release previous vehicle.");
+          setSaving(false);
+          return;
+        }
+      }
+
+      if (assignedVehicleId) {
+        // Release any other driver currently on the chosen vehicle
+        const { error: releaseError } = await supabase
+          .from("vehicle_driver_assignments")
+          .update({ unassigned_at: nowIso })
+          .eq("vehicle_id", assignedVehicleId)
+          .eq("fleet_id", fleetId!)
+          .is("unassigned_at", null);
+        if (releaseError) {
+          console.error(releaseError);
+          toast.error("Driver saved, but could not clear existing assignment on that vehicle.");
+          setSaving(false);
+          return;
+        }
+
+        const { error: assignError } = await supabase
+          .from("vehicle_driver_assignments")
+          .insert({
+            fleet_id: fleetId!,
+            vehicle_id: assignedVehicleId,
+            driver_id: savedDriverId,
+            assigned_at: nowIso,
+          });
+        if (assignError) {
+          console.error(assignError);
+          toast.error("Driver saved, but vehicle assignment failed.");
+          setSaving(false);
+          return;
+        }
+      }
+    }
+
+    setSaving(false);
     toast.success(isEdit ? "Driver updated" : "Driver added");
     onOpenChange(false);
     onSaved();
@@ -300,6 +402,36 @@ export function DriverFormSheet({
                 value={uberDriverId}
                 onChange={(e) => setUberDriverId(e.target.value)}
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Assigned Vehicle</Label>
+              <Select
+                value={assignedVehicleId || "__none__"}
+                onValueChange={(v) => setAssignedVehicleId(v === "__none__" ? "" : (v ?? ""))}
+              >
+                <SelectTrigger className="w-full">
+                  {assignedVehicleId ? (
+                    (() => {
+                      const v = vehicles.find((x) => x.id === assignedVehicleId);
+                      return (
+                        <span className="flex flex-1 text-left truncate">
+                          {v ? `${v.registration} (${v.make} ${v.model})` : "Loading..."}
+                        </span>
+                      );
+                    })()
+                  ) : (
+                    <SelectValue placeholder="No vehicle" />
+                  )}
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">No vehicle</SelectItem>
+                  {vehicles.map((v) => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {v.registration} ({v.make} {v.model})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

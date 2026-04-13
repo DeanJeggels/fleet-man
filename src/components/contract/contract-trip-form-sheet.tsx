@@ -39,7 +39,7 @@ export function ContractTripFormSheet({
   trip,
   onSaved,
 }: ContractTripFormSheetProps) {
-  const { fleetId } = useFleet()
+  const { fleetId, isDriver, driverId: myDriverId } = useFleet()
   const [saving, setSaving] = useState(false)
   const [clients, setClients] = useState<ContractClient[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -51,6 +51,7 @@ export function ContractTripFormSheet({
   const [tripDate, setTripDate] = useState(trip?.trip_date ?? format(new Date(), "yyyy-MM-dd"))
   const [tripTime, setTripTime] = useState(trip?.trip_time ?? "")
   const [companyLabel, setCompanyLabel] = useState(trip?.company_label ?? "")
+  const [coordinator, setCoordinator] = useState(trip?.coordinator ?? "")
   const [area, setArea] = useState(trip?.area ?? "")
   const [pax, setPax] = useState(trip?.pax != null ? String(trip.pax) : "")
   const [amount, setAmount] = useState(trip?.amount != null ? String(trip.amount) : "")
@@ -79,13 +80,29 @@ export function ContractTripFormSheet({
       setVehicles((vehiclesRes.data ?? []) as Vehicle[])
       setDrivers((driversRes.data ?? []) as Driver[])
 
+      // For drivers creating a new trip, fetch their own assigned vehicle
+      let driverVehicleId: string | null = null;
+      if (isDriver && myDriverId && !trip) {
+        const { data: assignment } = await supabase
+          .from("vehicle_driver_assignments")
+          .select("vehicle_id")
+          .eq("driver_id", myDriverId)
+          .eq("fleet_id", fleetId!)
+          .is("unassigned_at", null)
+          .maybeSingle();
+        driverVehicleId = assignment?.vehicle_id ?? null;
+      }
+
       // Reset form state
       setClientId(trip?.client_id ?? "")
-      setVehicleId(trip?.vehicle_id ?? "")
-      setDriverId(trip?.driver_id ?? "")
+      setVehicleId(
+        trip?.vehicle_id ?? (isDriver && !trip ? driverVehicleId ?? "" : "")
+      )
+      setDriverId(trip?.driver_id ?? (isDriver && !trip ? myDriverId ?? "" : ""))
       setTripDate(trip?.trip_date ?? format(new Date(), "yyyy-MM-dd"))
       setTripTime(trip?.trip_time ?? "")
       setCompanyLabel(trip?.company_label ?? "")
+      setCoordinator(trip?.coordinator ?? "")
       setArea(trip?.area ?? "")
       setPax(trip?.pax != null ? String(trip.pax) : "")
       setAmount(trip?.amount != null ? String(trip.amount) : "")
@@ -140,6 +157,7 @@ export function ContractTripFormSheet({
       trip_date: tripDate,
       trip_time: tripTime || null,
       company_label: companyLabel.trim().slice(0, 100) || null,
+      coordinator: coordinator.trim().slice(0, 100) || null,
       area: area.trim().slice(0, 200),
       pax: paxNum,
       amount: amountNum,
@@ -212,46 +230,63 @@ export function ContractTripFormSheet({
             </Select>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="driver">Driver</Label>
-              <Select value={driverId} onValueChange={(v) => setDriverId(v ?? "")}>
-                <SelectTrigger id="driver" className="w-full">
-                  {driverLabel ? (
-                    <span className="flex flex-1 text-left truncate">{driverLabel}</span>
-                  ) : (
-                    <SelectValue placeholder="Select driver" />
-                  )}
-                </SelectTrigger>
-                <SelectContent>
-                  {drivers.map((d) => (
-                    <SelectItem key={d.id} value={d.id}>
-                      {d.first_name} {d.last_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {isDriver ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Driver</Label>
+                <div className="flex h-9 items-center rounded-md border bg-muted/50 px-3 text-sm">
+                  {driverLabel ?? "—"}
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Vehicle</Label>
+                <div className="flex h-9 items-center rounded-md border bg-muted/50 px-3 text-sm">
+                  {vehicleLabel ?? "No vehicle assigned"}
+                </div>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="vehicle">Vehicle</Label>
-              <Select value={vehicleId} onValueChange={(v) => setVehicleId(v ?? "")}>
-                <SelectTrigger id="vehicle" className="w-full">
-                  {vehicleLabel ? (
-                    <span className="flex flex-1 text-left truncate">{vehicleLabel}</span>
-                  ) : (
-                    <SelectValue placeholder="Select vehicle" />
-                  )}
-                </SelectTrigger>
-                <SelectContent>
-                  {vehicles.map((v) => (
-                    <SelectItem key={v.id} value={v.id}>
-                      {v.registration}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="driver">Driver</Label>
+                <Select value={driverId} onValueChange={(v) => setDriverId(v ?? "")}>
+                  <SelectTrigger id="driver" className="w-full">
+                    {driverLabel ? (
+                      <span className="flex flex-1 text-left truncate">{driverLabel}</span>
+                    ) : (
+                      <SelectValue placeholder="Select driver" />
+                    )}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {drivers.map((d) => (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.first_name} {d.last_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="vehicle">Vehicle</Label>
+                <Select value={vehicleId} onValueChange={(v) => setVehicleId(v ?? "")}>
+                  <SelectTrigger id="vehicle" className="w-full">
+                    {vehicleLabel ? (
+                      <span className="flex flex-1 text-left truncate">{vehicleLabel}</span>
+                    ) : (
+                      <SelectValue placeholder="Select vehicle" />
+                    )}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vehicles.map((v) => (
+                      <SelectItem key={v.id} value={v.id}>
+                        {v.registration}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -286,15 +321,25 @@ export function ContractTripFormSheet({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="area">Area *</Label>
+              <Label htmlFor="coordinator">Co-ordinator</Label>
               <Input
-                id="area"
-                value={area}
-                onChange={(e) => setArea(e.target.value)}
-                placeholder="e.g. Athlone"
-                required
+                id="coordinator"
+                value={coordinator}
+                onChange={(e) => setCoordinator(e.target.value)}
+                placeholder="Who co-ordinated this trip"
               />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="area">Area *</Label>
+            <Input
+              id="area"
+              value={area}
+              onChange={(e) => setArea(e.target.value)}
+              placeholder="e.g. Athlone"
+              required
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
