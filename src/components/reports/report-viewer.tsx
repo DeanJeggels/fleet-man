@@ -344,10 +344,10 @@ export function ReportViewer({ reportType, filters, trigger }: ReportViewerProps
     setDownloading(true);
     try {
       const supabase = createClient();
+      // fleet_id is derived server-side from the caller's JWT; do not send it here.
       const { data: csvData, error } = await supabase.functions.invoke("fleet-csv-report", {
         body: {
           report_type: reportType,
-          fleet_id: fleetId!,
           filters: {
             start_date: filters.startDate,
             end_date: filters.endDate,
