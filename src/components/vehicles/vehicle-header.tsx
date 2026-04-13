@@ -4,14 +4,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Pencil } from "lucide-react";
+import { useFleet } from "@/contexts/fleet-context";
 import type { Tables } from "@/types/database";
 
 interface VehicleHeaderProps {
   vehicle: Tables<"vehicles">;
   currentDriverName: string | null;
+  onEdit?: () => void;
 }
 
-export function VehicleHeader({ vehicle, currentDriverName }: VehicleHeaderProps) {
+export function VehicleHeader({ vehicle, currentDriverName, onEdit }: VehicleHeaderProps) {
+  const { isOwnerOrAdmin } = useFleet();
+
   return (
     <Card>
       <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
@@ -48,10 +52,12 @@ export function VehicleHeader({ vehicle, currentDriverName }: VehicleHeaderProps
           </div>
         </div>
 
-        <Button variant="outline" size="sm">
-          <Pencil className="mr-2 h-4 w-4" />
-          Edit Vehicle
-        </Button>
+        {isOwnerOrAdmin && onEdit && (
+          <Button variant="outline" size="sm" onClick={onEdit} className="cursor-pointer">
+            <Pencil className="mr-2 h-4 w-4" />
+            Edit Vehicle
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
