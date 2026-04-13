@@ -101,7 +101,7 @@ export function OverviewTab({ vehicle }: OverviewTabProps) {
           color="warning"
         />
         <KPICard
-          title="Uber Earnings"
+          title="E-Hailing Earnings"
           value={formatZAR.format(vehicle.total_earnings)}
           icon={DollarSign}
           color="success"

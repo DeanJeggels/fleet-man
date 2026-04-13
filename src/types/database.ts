@@ -1351,7 +1351,7 @@ export type Database = {
     Enums: {
       currency_code: "ZAR" | "USD" | "EUR" | "GBP"
       driver_status: "active" | "inactive" | "suspended"
-      fleet_category: "uber" | "contract"
+      fleet_category: "e_hailing" | "contract"
       line_item_type: "parts" | "labour" | "consumable" | "other"
       maintenance_category:
         | "routine"
@@ -1497,7 +1497,7 @@ export const Constants = {
     Enums: {
       currency_code: ["ZAR", "USD", "EUR", "GBP"],
       driver_status: ["active", "inactive", "suspended"],
-      fleet_category: ["uber", "contract"],
+      fleet_category: ["e_hailing", "contract"],
       line_item_type: ["parts", "labour", "consumable", "other"],
       maintenance_category: [
         "routine",

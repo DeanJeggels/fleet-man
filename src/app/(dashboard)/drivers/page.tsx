@@ -137,7 +137,7 @@ export default function DriversPage() {
                 : "bg-blue-100 text-blue-700"
             }
           >
-            {row.category}
+            {row.category === "contract" ? "Contract" : "E-Hailing"}
           </Badge>
         ),
       },

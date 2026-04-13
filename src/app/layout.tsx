@@ -18,7 +18,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "Fleet Manager",
-  description: "Uber fleet management dashboard",
+  description: "Fleet management dashboard",
 };
 
 export default function RootLayout({
