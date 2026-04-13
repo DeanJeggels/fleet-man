@@ -19,41 +19,62 @@ export default function SetPasswordPage() {
   const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
-    const supabase = createClient();
-    let settled = false;
+    if (typeof window === "undefined") return;
 
-    // onAuthStateChange fires INITIAL_SESSION once the browser client has
-    // processed the URL hash (#access_token=... from Supabase's implicit flow)
-    // or any stored session. Wait for that event rather than racing getSession.
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (settled) return;
-      if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
-        settled = true;
-        if (session) {
+    const supabase = createClient();
+
+    async function establishSession() {
+      // Supabase's implicit-flow magic link arrives as
+      //   /auth/set-password#access_token=...&refresh_token=...&type=invite
+      // We MUST call setSession() with those tokens manually — relying on the
+      // SSR client's auto-detection races against onAuthStateChange firing
+      // INITIAL_SESSION with a null session, which used to bounce the user
+      // straight to /login.
+      const hash = window.location.hash;
+      if (hash && hash.length > 1) {
+        const params = new URLSearchParams(hash.slice(1));
+        const access_token = params.get("access_token");
+        const refresh_token = params.get("refresh_token");
+        const error_description = params.get("error_description");
+
+        if (error_description) {
+          setError(decodeURIComponent(error_description));
           setCheckingSession(false);
-        } else {
-          router.replace("/login");
+          return;
+        }
+
+        if (access_token && refresh_token) {
+          const { error: setErr } = await supabase.auth.setSession({
+            access_token,
+            refresh_token,
+          });
+          if (setErr) {
+            console.error("[set-password] setSession error:", setErr);
+            setError(setErr.message);
+            setCheckingSession(false);
+            return;
+          }
+          // Clean the hash off the URL so a refresh doesn't re-trigger the flow
+          window.history.replaceState(
+            null,
+            "",
+            window.location.pathname + window.location.search
+          );
+          setCheckingSession(false);
+          return;
         }
       }
-    });
 
-    // Safety net: if nothing has fired after 4s, fall through
-    const timeoutId = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-          setCheckingSession(false);
-        } else {
-          router.replace("/login");
-        }
-      });
-    }, 4000);
+      // No hash tokens — see if we already have a session (user came back later)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setCheckingSession(false);
+      } else {
+        router.replace("/login");
+      }
+    }
 
-    return () => {
-      sub.subscription.unsubscribe();
-      clearTimeout(timeoutId);
-    };
+    establishSession();
   }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
