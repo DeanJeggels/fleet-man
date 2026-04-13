@@ -74,6 +74,7 @@ export function ContractTripFormSheet({
           .select("*")
           .eq("fleet_id", fleetId!)
           .eq("category", "contract")
+          .eq("status", "active")
           .order("last_name"),
       ])
       setClients((clientsRes.data ?? []) as ContractClient[])

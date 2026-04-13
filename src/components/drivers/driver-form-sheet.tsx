@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useFleet } from "@/contexts/fleet-context";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { Archive, CalendarIcon, Trash2 } from "lucide-react";
 import type { Driver, DriverStatus, FleetCategory, Vehicle } from "@/types/database";
 
 import {
@@ -55,10 +55,17 @@ export function DriverFormSheet({
   onSaved,
 }: DriverFormSheetProps) {
   const supabase = createClient();
-  const { fleetId } = useFleet();
+  const { fleetId, isOwnerOrAdmin } = useFleet();
   const isEdit = !!driver;
 
   const [saving, setSaving] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [historyCounts, setHistoryCounts] = useState<{
+    trips: number;
+    invoices: number;
+    payouts: number;
+  } | null>(null);
   const [consented, setConsented] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -132,6 +139,7 @@ export function DriverFormSheet({
       if (!driver) {
         setAssignedVehicleId("");
         setInitialVehicleId("");
+        setHistoryCounts(null);
       }
       return;
     }
@@ -147,7 +155,32 @@ export function DriverFormSheet({
       setAssignedVehicleId(vid);
       setInitialVehicleId(vid);
     }
+    async function loadHistoryCounts() {
+      const [tripsRes, invoicesRes, payoutsRes] = await Promise.all([
+        supabase
+          .from("contract_trips")
+          .select("id", { count: "exact", head: true })
+          .eq("driver_id", driver!.id)
+          .eq("fleet_id", fleetId!),
+        supabase
+          .from("contract_invoices")
+          .select("id", { count: "exact", head: true })
+          .eq("driver_id", driver!.id)
+          .eq("fleet_id", fleetId!),
+        supabase
+          .from("driver_payouts")
+          .select("id", { count: "exact", head: true })
+          .eq("driver_id", driver!.id)
+          .eq("fleet_id", fleetId!),
+      ]);
+      setHistoryCounts({
+        trips: tripsRes.count ?? 0,
+        invoices: invoicesRes.count ?? 0,
+        payouts: payoutsRes.count ?? 0,
+      });
+    }
     loadCurrentAssignment();
+    loadHistoryCounts();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, driver, fleetId]);
 
@@ -266,6 +299,82 @@ export function DriverFormSheet({
 
     setSaving(false);
     toast.success(isEdit ? "Driver updated" : "Driver added");
+    onOpenChange(false);
+    onSaved();
+  }
+
+  async function handleArchive() {
+    if (!driver || !fleetId) return;
+    if (!window.confirm(
+      `Archive ${driver.first_name} ${driver.last_name}? They will be hidden from pickers but their history is preserved. You can restore them later by editing and changing status back to Active.`
+    )) return;
+
+    setArchiving(true);
+    const nowIso = new Date().toISOString();
+
+    // Release any active vehicle assignment
+    const { error: unassignError } = await supabase
+      .from("vehicle_driver_assignments")
+      .update({ unassigned_at: nowIso })
+      .eq("driver_id", driver.id)
+      .eq("fleet_id", fleetId!)
+      .is("unassigned_at", null);
+
+    if (unassignError) {
+      console.error(unassignError);
+      toast.error("Could not release active vehicle assignment.");
+      setArchiving(false);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("drivers")
+      .update({ status: "inactive" as DriverStatus })
+      .eq("id", driver.id)
+      .eq("fleet_id", fleetId!);
+
+    setArchiving(false);
+
+    if (error) {
+      console.error(error);
+      toast.error("Could not archive driver.");
+      return;
+    }
+
+    toast.success("Driver archived.");
+    onOpenChange(false);
+    onSaved();
+  }
+
+  async function handleDelete() {
+    if (!driver || !fleetId) return;
+    if (!historyCounts) return;
+    const total = historyCounts.trips + historyCounts.invoices + historyCounts.payouts;
+    if (total > 0) {
+      toast.error("Cannot delete: driver has trip, invoice or payout history. Archive instead.");
+      return;
+    }
+    if (!window.confirm(
+      `Permanently delete ${driver.first_name} ${driver.last_name}? This cannot be undone.`
+    )) return;
+
+    setDeleting(true);
+
+    const { error } = await supabase
+      .from("drivers")
+      .delete()
+      .eq("id", driver.id)
+      .eq("fleet_id", fleetId!);
+
+    setDeleting(false);
+
+    if (error) {
+      console.error(error);
+      toast.error(`Delete failed: ${error.message}`);
+      return;
+    }
+
+    toast.success("Driver deleted.");
     onOpenChange(false);
     onSaved();
   }
@@ -488,16 +597,69 @@ export function DriverFormSheet({
           )}
         </div>
 
+        {isEdit && isOwnerOrAdmin && historyCounts && (
+          <div className="px-4 pb-2">
+            <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+              <p className="font-medium text-foreground">Danger zone</p>
+              <p className="mt-1">
+                This driver has {historyCounts.trips} trip
+                {historyCounts.trips === 1 ? "" : "s"}, {historyCounts.invoices} invoice
+                {historyCounts.invoices === 1 ? "" : "s"} and {historyCounts.payouts} payout
+                {historyCounts.payouts === 1 ? "" : "s"} on record.
+                {historyCounts.trips + historyCounts.invoices + historyCounts.payouts > 0
+                  ? " Permanent delete is disabled — archive instead to preserve history."
+                  : " No history — permanent delete is allowed."}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleArchive}
+                  disabled={archiving || deleting || driver?.status === "inactive"}
+                  className="cursor-pointer"
+                >
+                  <Archive className="mr-1.5 h-4 w-4" />
+                  {archiving
+                    ? "Archiving..."
+                    : driver?.status === "inactive"
+                    ? "Already Archived"
+                    : "Archive Driver"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDelete}
+                  disabled={
+                    deleting ||
+                    archiving ||
+                    historyCounts.trips + historyCounts.invoices + historyCounts.payouts > 0
+                  }
+                  className="cursor-pointer border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 className="mr-1.5 h-4 w-4" />
+                  {deleting ? "Deleting..." : "Delete Permanently"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <SheetFooter>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={saving}
+            disabled={saving || archiving || deleting}
             className="cursor-pointer"
           >
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={saving || (!isEdit && !consented)} className="cursor-pointer">
+          <Button
+            onClick={handleSave}
+            disabled={saving || archiving || deleting || (!isEdit && !consented)}
+            className="cursor-pointer"
+          >
             {saving ? "Saving..." : isEdit ? "Update Driver" : "Add Driver"}
           </Button>
         </SheetFooter>
