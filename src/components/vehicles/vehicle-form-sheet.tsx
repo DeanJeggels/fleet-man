@@ -63,7 +63,7 @@ export function VehicleFormSheet({
   const [vin, setVin] = useState("");
   const [vehicleType, setVehicleType] = useState("");
   const [color, setColor] = useState("");
-  const [category, setCategory] = useState<FleetCategory>("uber");
+  const [category, setCategory] = useState<FleetCategory>("e_hailing");
   const [status, setStatus] = useState<VehicleStatus>("active");
   const [dateAdded, setDateAdded] = useState<Date | undefined>(undefined);
   const [notes, setNotes] = useState("");
@@ -91,7 +91,7 @@ export function VehicleFormSheet({
       setVin("");
       setVehicleType("");
       setColor("");
-      setCategory("uber");
+      setCategory("e_hailing");
       setStatus("active");
       setDateAdded(undefined);
       setNotes("");
@@ -236,12 +236,12 @@ export function VehicleFormSheet({
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <Label>Category</Label>
-              <Select value={category} onValueChange={(val) => setCategory((val ?? "uber") as FleetCategory)}>
+              <Select value={category} onValueChange={(val) => setCategory((val ?? "e_hailing") as FleetCategory)}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="uber">Uber</SelectItem>
+                  <SelectItem value="e_hailing">E-Hailing</SelectItem>
                   <SelectItem value="contract">Contract</SelectItem>
                 </SelectContent>
               </Select>

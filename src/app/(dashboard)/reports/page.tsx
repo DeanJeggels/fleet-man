@@ -69,7 +69,7 @@ const REPORT_OPTIONS: ReportOption[] = [
   },
   {
     value: "uber_performance",
-    label: "Uber Performance",
+    label: "E-Hailing Performance",
     description: "Trips, hours, distance and earnings",
     icon: TrendingUp,
   },

@@ -119,7 +119,7 @@ export default function VehiclesPage() {
               : "bg-blue-100 text-blue-700"
           }
         >
-          {String(row.category)}
+          {row.category === "contract" ? "Contract" : "E-Hailing"}
         </Badge>
       ),
     },
@@ -199,17 +199,20 @@ export default function VehiclesPage() {
         </div>
 
         <div className="flex flex-wrap gap-1">
-          {(["all", "uber", "contract"] as const).map((c) => (
-            <Button
-              key={c}
-              variant={categoryFilter === c ? "default" : "outline"}
-              size="sm"
-              onClick={() => setCategoryFilter(c)}
-              className="cursor-pointer"
-            >
-              {c === "all" ? "All" : c.charAt(0).toUpperCase() + c.slice(1)}
-            </Button>
-          ))}
+          {(["all", "e_hailing", "contract"] as const).map((c) => {
+            const label = c === "all" ? "All" : c === "e_hailing" ? "E-Hailing" : "Contract";
+            return (
+              <Button
+                key={c}
+                variant={categoryFilter === c ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCategoryFilter(c)}
+                className="cursor-pointer"
+              >
+                {label}
+              </Button>
+            );
+          })}
           <span className="mx-1 text-muted-foreground">|</span>
           {STATUS_FILTERS.map((sf) => (
             <Button

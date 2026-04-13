@@ -115,7 +115,7 @@ export default function DashboardPage() {
               loading={loading}
             />
             <KPICard
-              title="Uber Revenue MTD"
+              title="E-Hailing Revenue MTD"
               value={zarFormat.format(uberRevenue)}
               icon={DollarSign}
               color="success"

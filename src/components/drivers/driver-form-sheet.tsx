@@ -69,7 +69,7 @@ export function DriverFormSheet({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [status, setStatus] = useState<DriverStatus>("active");
-  const [category, setCategory] = useState<FleetCategory>("uber");
+  const [category, setCategory] = useState<FleetCategory>("e_hailing");
   const [commissionPerTrip, setCommissionPerTrip] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [uberDriverId, setUberDriverId] = useState("");
@@ -98,7 +98,7 @@ export function DriverFormSheet({
       setEmail("");
       setPhone("");
       setStatus("active");
-      setCategory("uber");
+      setCategory("e_hailing");
       setCommissionPerTrip("");
       setBankAccountNumber("");
       setUberDriverId("");
@@ -268,12 +268,12 @@ export function DriverFormSheet({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Category</Label>
-              <Select value={category} onValueChange={(v) => setCategory((v ?? "uber") as FleetCategory)}>
+              <Select value={category} onValueChange={(v) => setCategory((v ?? "e_hailing") as FleetCategory)}>
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="uber">Uber</SelectItem>
+                  <SelectItem value="e_hailing">E-Hailing</SelectItem>
                   <SelectItem value="contract">Contract</SelectItem>
                 </SelectContent>
               </Select>
@@ -294,7 +294,7 @@ export function DriverFormSheet({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="uberDriverId">Uber Driver ID</Label>
+              <Label htmlFor="uberDriverId">Uber Driver ID (if applicable)</Label>
               <Input
                 id="uberDriverId"
                 value={uberDriverId}
