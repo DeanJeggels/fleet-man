@@ -39,13 +39,21 @@ const allMoreTabs: Tab[] = [
   { label: "Settings", icon: Settings, href: "/settings" },
 ];
 
+const driverMainTabs: Tab[] = [
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { label: "Fuel", icon: Fuel, href: "/fuel" },
+  { label: "Trips", icon: Briefcase, href: "/contract/trips" },
+];
+
 export function BottomTabs() {
   const pathname = usePathname();
-  const { isOwnerOrAdmin } = useFleet();
+  const { isOwnerOrAdmin, isDriver } = useFleet();
   const [open, setOpen] = useState(false);
 
-  const mainTabs = allMainTabs.filter((t) => isOwnerOrAdmin || !t.ownerOnly).slice(0, 4);
-  const moreTabs = allMoreTabs.filter((t) => isOwnerOrAdmin || !t.ownerOnly);
+  const mainTabs = isDriver
+    ? driverMainTabs
+    : allMainTabs.filter((t) => isOwnerOrAdmin || !t.ownerOnly).slice(0, 4);
+  const moreTabs = isDriver ? [] : allMoreTabs.filter((t) => isOwnerOrAdmin || !t.ownerOnly);
 
   const isMoreActive = moreTabs.some(
     (t) => pathname === t.href || pathname.startsWith(t.href)

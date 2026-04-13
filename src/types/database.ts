@@ -243,6 +243,7 @@ export type Database = {
           client_id: string
           commission_amount: number | null
           company_label: string | null
+          coordinator: string | null
           created_at: string
           driver_id: string | null
           fleet_id: string
@@ -261,6 +262,7 @@ export type Database = {
           client_id: string
           commission_amount?: number | null
           company_label?: string | null
+          coordinator?: string | null
           created_at?: string
           driver_id?: string | null
           fleet_id: string
@@ -279,6 +281,7 @@ export type Database = {
           client_id?: string
           commission_amount?: number | null
           company_label?: string | null
+          coordinator?: string | null
           created_at?: string
           driver_id?: string | null
           fleet_id?: string
@@ -463,7 +466,9 @@ export type Database = {
       fleet_invites: {
         Row: {
           accepted_at: string | null
+          assigned_vehicle_id: string | null
           created_at: string
+          driver_id: string | null
           email: string
           fleet_id: string
           id: string
@@ -472,7 +477,9 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          assigned_vehicle_id?: string | null
           created_at?: string
+          driver_id?: string | null
           email: string
           fleet_id: string
           id?: string
@@ -481,7 +488,9 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          assigned_vehicle_id?: string | null
           created_at?: string
+          driver_id?: string | null
           email?: string
           fleet_id?: string
           id?: string
@@ -628,38 +637,47 @@ export type Database = {
       }
       fuel_logs: {
         Row: {
+          ai_parse_confidence: number | null
           cost: number
           created_at: string
           currency: Database["public"]["Enums"]["currency_code"]
+          driver_id: string | null
           fleet_id: string
           id: string
           litres: number | null
           notes: string | null
           odometer_reading: number | null
+          receipt_url: string | null
           vehicle_id: string
           week_starting: string
         }
         Insert: {
+          ai_parse_confidence?: number | null
           cost: number
           created_at?: string
           currency?: Database["public"]["Enums"]["currency_code"]
+          driver_id?: string | null
           fleet_id: string
           id?: string
           litres?: number | null
           notes?: string | null
           odometer_reading?: number | null
+          receipt_url?: string | null
           vehicle_id: string
           week_starting: string
         }
         Update: {
+          ai_parse_confidence?: number | null
           cost?: number
           created_at?: string
           currency?: Database["public"]["Enums"]["currency_code"]
+          driver_id?: string | null
           fleet_id?: string
           id?: string
           litres?: number | null
           notes?: string | null
           odometer_reading?: number | null
+          receipt_url?: string | null
           vehicle_id?: string
           week_starting?: string
         }
@@ -986,6 +1004,7 @@ export type Database = {
         Row: {
           created_at: string
           display_name: string | null
+          driver_id: string | null
           fleet_id: string
           id: string
           role: string
@@ -994,6 +1013,7 @@ export type Database = {
         Insert: {
           created_at?: string
           display_name?: string | null
+          driver_id?: string | null
           fleet_id: string
           id?: string
           role?: string
@@ -1002,6 +1022,7 @@ export type Database = {
         Update: {
           created_at?: string
           display_name?: string | null
+          driver_id?: string | null
           fleet_id?: string
           id?: string
           role?: string
@@ -1596,4 +1617,4 @@ export type NotificationType = Database["public"]["Enums"]["notification_type"]
 export type CurrencyCode = Database["public"]["Enums"]["currency_code"]
 
 // Role helpers
-export type FleetRole = "owner" | "admin" | "member"
+export type FleetRole = "owner" | "admin" | "member" | "driver"

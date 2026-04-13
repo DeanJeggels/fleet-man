@@ -4,9 +4,9 @@ import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useFleet } from "@/contexts/fleet-context";
 import { PageHeader } from "@/components/shared/page-header";
-import { OwnerOnlyGuard } from "@/components/shared/owner-only-guard";
 import { DataTable, type ColumnDef } from "@/components/shared/data-table";
 import { BatchFuelForm } from "@/components/fuel/batch-fuel-form";
+import { DriverFuelUpload } from "@/components/fuel/driver-fuel-upload";
 
 interface Vehicle {
   id: string;
@@ -66,10 +66,72 @@ const columns: ColumnDef<Record<string, unknown>>[] = [
 ];
 
 export default function FuelPage() {
+  const { isDriver, isOwnerOrAdmin } = useFleet();
+  if (isDriver) return <DriverFuelView />;
+  if (!isOwnerOrAdmin) {
+    return (
+      <div className="rounded-lg border bg-white p-6 text-sm text-muted-foreground">
+        You don&apos;t have access to fuel logs.
+      </div>
+    );
+  }
+  return <FuelPageContent />;
+}
+
+function DriverFuelView() {
+  const supabase = createClient();
+  const { fleetId, driverId } = useFleet();
+  const [logs, setLogs] = useState<FuelLogRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchLogs = useCallback(async () => {
+    if (!fleetId || !driverId) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from("fuel_logs")
+      .select("*, vehicle:vehicles(registration)")
+      .eq("fleet_id", fleetId!)
+      .eq("driver_id", driverId!)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (data) {
+      setLogs(
+        data.map((row) => ({
+          id: row.id,
+          vehicle_registration:
+            (row.vehicle as unknown as { registration: string })?.registration ?? "Unknown",
+          week_starting: row.week_starting,
+          litres: row.litres,
+          cost: row.cost,
+          odometer_reading: row.odometer_reading,
+          created_at: row.created_at,
+        }))
+      );
+    }
+    setLoading(false);
+  }, [supabase, fleetId, driverId]);
+
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
+
   return (
-    <OwnerOnlyGuard>
-      <FuelPageContent />
-    </OwnerOnlyGuard>
+    <div className="space-y-6">
+      <PageHeader
+        title="Fuel Log"
+        description="Snap a photo of your receipt to log a fuel entry."
+      />
+      <DriverFuelUpload onSaved={fetchLogs} />
+      <div>
+        <h2 className="mb-3 text-lg font-semibold">Your Recent Entries</h2>
+        <DataTable
+          columns={columns}
+          data={logs as Record<string, unknown>[]}
+          loading={loading}
+          emptyMessage="No fuel entries yet."
+        />
+      </div>
+    </div>
   );
 }
 

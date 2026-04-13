@@ -14,6 +14,7 @@ import {
   Route,
   CalendarIcon,
   FileBarChart,
+  Briefcase,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/shared/page-header";
@@ -84,6 +85,12 @@ const REPORT_OPTIONS: ReportOption[] = [
     label: "Distance Analysis",
     description: "Kilometre tracking per vehicle",
     icon: Route,
+  },
+  {
+    value: "contract_trips",
+    label: "Contract Trips",
+    description: "All contract trips between selected dates with client, driver, coordinator and amount",
+    icon: Briefcase,
   },
 ];
 

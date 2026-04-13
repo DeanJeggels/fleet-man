@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Car, DollarSign, Wrench, Route } from "lucide-react";
+import Link from "next/link";
+import { Car, DollarSign, Wrench, Route, Fuel, Briefcase } from "lucide-react";
 import { startOfMonth, format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
 import { useFleet } from "@/contexts/fleet-context";
@@ -20,7 +21,7 @@ const zarFormat = new Intl.NumberFormat("en-ZA", {
 });
 
 export default function DashboardPage() {
-  const { fleetId, isOwnerOrAdmin } = useFleet();
+  const { fleetId, isOwnerOrAdmin, isDriver, displayName } = useFleet();
   const [loading, setLoading] = useState(true);
   const [activeVehicles, setActiveVehicles] = useState(0);
   const [totalVehicles, setTotalVehicles] = useState(0);
@@ -29,7 +30,7 @@ export default function DashboardPage() {
   const [fleetKm, setFleetKm] = useState(0);
 
   useEffect(() => {
-    if (!fleetId) return;
+    if (!fleetId || isDriver) return;
     async function fetchKPIs() {
       const supabase = createClient();
       const monthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
@@ -86,7 +87,48 @@ export default function DashboardPage() {
       setLoading(false);
     }
     fetchKPIs();
-  }, [fleetId]);
+  }, [fleetId, isDriver]);
+
+  if (isDriver) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title={`Welcome${displayName ? `, ${displayName}` : ""}`}
+          description="Log your trips and fuel receipts from your phone."
+        />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Link
+            href="/fuel"
+            className="group flex items-start gap-4 rounded-lg border-2 border-transparent bg-white p-6 shadow-sm transition-colors hover:border-blue-500/40"
+          >
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-blue-100 text-blue-600">
+              <Fuel className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-base font-semibold">Log Fuel Receipt</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Snap a photo of your receipt — we&apos;ll fill in the rest.
+              </p>
+            </div>
+          </Link>
+          <Link
+            href="/contract/trips"
+            className="group flex items-start gap-4 rounded-lg border-2 border-transparent bg-white p-6 shadow-sm transition-colors hover:border-blue-500/40"
+          >
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-blue-100 text-blue-600">
+              <Briefcase className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-base font-semibold">Log a Trip</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Record a contract trip you just completed.
+              </p>
+            </div>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

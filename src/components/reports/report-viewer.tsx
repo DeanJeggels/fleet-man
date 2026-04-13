@@ -19,7 +19,8 @@ export type ReportType =
   | "fuel_consumption"
   | "uber_performance"
   | "routine_vs_emergency"
-  | "distance_analysis";
+  | "distance_analysis"
+  | "contract_trips";
 
 export interface ReportFilters {
   startDate: string | null;
@@ -84,6 +85,18 @@ const COLUMN_CONFIGS: Record<ReportType, ColumnDef<Row>[]> = {
     { key: "end_km", header: "End Km", sortable: true },
     { key: "distance", header: "Distance", sortable: true },
     { key: "period", header: "Period" },
+  ],
+  contract_trips: [
+    { key: "trip_date", header: "Date", sortable: true },
+    { key: "trip_time", header: "Time", sortable: true },
+    { key: "client_name", header: "Client", sortable: true },
+    { key: "driver_name", header: "Driver", sortable: true },
+    { key: "vehicle_reg", header: "Vehicle" },
+    { key: "company_label", header: "Company" },
+    { key: "coordinator", header: "Co-ordinator" },
+    { key: "area", header: "Area" },
+    { key: "pax", header: "Pax" },
+    { key: "amount", header: "Amount", sortable: true, render: (r) => zar(r.amount) },
   ],
 };
 
@@ -220,6 +233,35 @@ async function fetchReportData(
         count: v.count,
         total_cost: v.total,
         avg_cost: v.count > 0 ? v.total / v.count : 0,
+      }));
+    }
+
+    case "contract_trips": {
+      let q = supabase
+        .from("contract_trips")
+        .select(
+          "trip_date, trip_time, company_label, coordinator, area, pax, amount, client:contract_clients(name), driver:drivers(first_name, last_name), vehicle:vehicles(registration)"
+        )
+        .eq("fleet_id", fleetId)
+        .order("trip_date", { ascending: false })
+        .order("trip_time", { ascending: true })
+        .limit(500);
+      if (startDate) q = q.gte("trip_date", startDate);
+      if (endDate) q = q.lte("trip_date", endDate);
+      if (vehicleId) q = q.eq("vehicle_id", vehicleId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []).map((r: Row) => ({
+        trip_date: r.trip_date,
+        trip_time: r.trip_time ?? "-",
+        client_name: r.client?.name ?? "-",
+        driver_name: r.driver ? `${r.driver.first_name} ${r.driver.last_name}` : "-",
+        vehicle_reg: r.vehicle?.registration ?? "-",
+        company_label: r.company_label ?? "-",
+        coordinator: r.coordinator ?? "-",
+        area: r.area,
+        pax: r.pax ?? "-",
+        amount: r.amount,
       }));
     }
 
