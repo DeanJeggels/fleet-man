@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { createClient } from "@/lib/supabase/client"
+import { extractFunctionError } from "@/lib/supabase/extract-function-error"
 import { Skeleton } from "@/components/ui/skeleton"
 import { UploadIcon, FileIcon, CheckCircleIcon } from "lucide-react"
 import type { ParsedInvoice } from "@/types/database"
@@ -63,7 +64,10 @@ export function InvoiceUpload({ onParsed }: InvoiceUploadProps) {
 
       clearInterval(progressInterval)
 
-      if (error) throw error
+      if (error || (data && data.error)) {
+        const msg = await extractFunctionError(error, data)
+        throw new Error(msg)
+      }
 
       setProgress(100)
       setState("parsing")
