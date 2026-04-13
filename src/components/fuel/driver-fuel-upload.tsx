@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { extractFunctionError } from "@/lib/supabase/extract-function-error";
 import { useFleet } from "@/contexts/fleet-context";
 import { toast } from "sonner";
 import { Camera, CheckCircle2, Loader2, UploadIcon } from "lucide-react";
@@ -95,8 +96,10 @@ export function DriverFuelUpload({ onSaved }: DriverFuelUploadProps) {
         { body: formData }
       );
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error || (data && data.error)) {
+        const msg = await extractFunctionError(error, data);
+        throw new Error(msg);
+      }
 
       const url = (data?.receipt_url as string) || null;
       const parsedData = (data?.parsed as ParsedFuelReceipt) || null;

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Send } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { extractFunctionError } from "@/lib/supabase/extract-function-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -87,14 +88,21 @@ export function TelegramTab() {
       }
 
       const supabase = createClient();
-      const { error } = await supabase.functions.invoke("fleet-telegram-test", {
+      const { data, error } = await supabase.functions.invoke("fleet-telegram-test", {
         body: {},
       });
 
-      if (error) throw error;
+      if (error || (data && data.error)) {
+        const msg = await extractFunctionError(error, data);
+        console.error("[fleet-telegram-test]", msg, error ?? data);
+        toast.error(msg);
+        return;
+      }
       toast.success("Test message sent successfully");
-    } catch {
-      toast.error("Failed to send test message");
+    } catch (err) {
+      const msg = await extractFunctionError(err);
+      console.error("[fleet-telegram-test]", msg, err);
+      toast.error(msg);
     } finally {
       setSending(false);
     }

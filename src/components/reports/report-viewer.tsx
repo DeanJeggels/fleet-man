@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { extractFunctionError } from "@/lib/supabase/extract-function-error";
 import { useFleet } from "@/contexts/fleet-context";
 import { toast } from "sonner";
 import { Download, Loader2 } from "lucide-react";
@@ -357,7 +358,12 @@ export function ReportViewer({ reportType, filters, trigger }: ReportViewerProps
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        const msg = await extractFunctionError(error);
+        console.error("[fleet-csv-report]", msg, error);
+        toast.error(msg);
+        return;
+      }
 
       const blob = new Blob([csvData], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
@@ -370,8 +376,9 @@ export function ReportViewer({ reportType, filters, trigger }: ReportViewerProps
       URL.revokeObjectURL(url);
       toast.success("CSV downloaded");
     } catch (err) {
-      toast.error("Failed to download CSV");
-      console.error(err);
+      const msg = await extractFunctionError(err);
+      console.error("[fleet-csv-report]", msg, err);
+      toast.error(msg);
     } finally {
       setDownloading(false);
     }

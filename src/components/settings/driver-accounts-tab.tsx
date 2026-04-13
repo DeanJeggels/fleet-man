@@ -5,6 +5,7 @@ import { Plus, Trash2, CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { createClient } from "@/lib/supabase/client";
+import { extractFunctionError } from "@/lib/supabase/extract-function-error";
 import { useFleet } from "@/contexts/fleet-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -129,9 +130,30 @@ export function DriverAccountsTab() {
 
   async function handleInvite() {
     if (!fleetId) return;
-    if (!firstName.trim() || !lastName.trim() || !email.trim() || !licenseNumber.trim() || !licenseExpiry) {
-      toast.error("First name, last name, email, license number and expiry are required.");
+
+    // Client-side validation with friendly messages before hitting the edge function
+    if (!firstName.trim()) { toast.error("First name is required."); return; }
+    if (!lastName.trim())  { toast.error("Last name is required."); return; }
+    if (!email.trim())     { toast.error("Email is required."); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      toast.error("Please enter a valid email address.");
       return;
+    }
+    if (!licenseNumber.trim()) { toast.error("License number is required."); return; }
+    if (!licenseExpiry)        { toast.error("License expiry date is required."); return; }
+
+    let commissionNum: number | null = null;
+    if (commissionPerTrip.trim()) {
+      const n = Number(commissionPerTrip);
+      if (!isFinite(n) || n < 0) {
+        toast.error("Commission per trip must be a positive number.");
+        return;
+      }
+      if (n > 100000) {
+        toast.error("Commission per trip must be R100,000 or less.");
+        return;
+      }
+      commissionNum = n;
     }
 
     setSubmitting(true);
@@ -139,14 +161,13 @@ export function DriverAccountsTab() {
 
     const { data, error } = await supabase.functions.invoke("invite-driver", {
       body: {
-        fleet_id: fleetId,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         email: email.trim().toLowerCase(),
         license_number: licenseNumber.trim(),
         license_expiry: format(licenseExpiry, "yyyy-MM-dd"),
         phone: phone.trim() || null,
-        commission_per_trip: commissionPerTrip ? Number(commissionPerTrip) : null,
+        commission_per_trip: commissionNum,
         assigned_vehicle_id: assignedVehicleId || null,
         category: "contract",
       },
@@ -155,8 +176,9 @@ export function DriverAccountsTab() {
     setSubmitting(false);
 
     if (error || (data && data.error)) {
-      console.error(error ?? data?.error);
-      toast.error(`Failed to invite driver: ${error?.message ?? data?.error ?? "Unknown error"}`);
+      const msg = await extractFunctionError(error, data);
+      console.error("[invite-driver]", msg, error ?? data);
+      toast.error(msg);
       return;
     }
 
