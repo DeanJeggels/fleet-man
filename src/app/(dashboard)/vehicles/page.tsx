@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import type { Vehicle, VehicleStatus, FleetCategory } from "@/types/database";
 import { Badge } from "@/components/ui/badge";
@@ -39,34 +40,27 @@ const kmFormat = new Intl.NumberFormat("en-ZA");
 export default function VehiclesPage() {
   const router = useRouter();
   const { fleetId, isOwnerOrAdmin } = useFleet();
-  const [vehicles, setVehicles] = useState<VehicleWithDriver[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<FleetCategory | "all">("all");
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const fetchVehicles = useCallback(async () => {
-    if (!fleetId) return;
-    setLoading(true);
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from("vehicles")
-      .select(
-        "*, vehicle_driver_assignments(driver:drivers(first_name, last_name))"
-      )
-      .eq("fleet_id", fleetId!)
-      .order("registration");
-
-    if (!error && data) {
-      setVehicles(data as unknown as VehicleWithDriver[]);
-    }
-    setLoading(false);
-  }, [fleetId]);
-
-  useEffect(() => {
-    fetchVehicles();
-  }, [fetchVehicles]);
+  const { data: vehicles = [], isLoading: loading, refetch: fetchVehicles } = useQuery({
+    queryKey: ["vehicles", fleetId],
+    enabled: !!fleetId,
+    queryFn: async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("vehicles")
+        .select(
+          "*, vehicle_driver_assignments(driver:drivers(first_name, last_name))"
+        )
+        .eq("fleet_id", fleetId!)
+        .order("registration");
+      if (error) throw error;
+      return (data ?? []) as unknown as VehicleWithDriver[];
+    },
+  });
 
   const filtered = useMemo(() => {
     let result = vehicles;

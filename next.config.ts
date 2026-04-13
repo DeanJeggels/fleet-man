@@ -7,10 +7,20 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const supabaseHttpHost = supabaseUrl || "";
 const supabaseWsHost = supabaseUrl ? supabaseUrl.replace(/^https:\/\//, "wss://") : "";
 
+const supabaseHostname = supabaseUrl ? new URL(supabaseUrl).hostname : "";
+
 const nextConfig: NextConfig = {
   reactCompiler: true,
   images: {
-    unoptimized: true,
+    remotePatterns: supabaseHostname
+      ? [
+          {
+            protocol: "https",
+            hostname: supabaseHostname,
+            pathname: "/storage/v1/object/**",
+          },
+        ]
+      : [],
   },
   headers: async () => [
     {
