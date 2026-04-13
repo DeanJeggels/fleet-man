@@ -14,6 +14,7 @@ import { useFleet } from "@/contexts/fleet-context";
 export function TelegramTab() {
   const { fleetId } = useFleet();
   const [chatId, setChatId] = useState("");
+  const [savedChatId, setSavedChatId] = useState("");
   const [connected, setConnected] = useState(false);
   const [sending, setSending] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -31,26 +32,34 @@ export function TelegramTab() {
 
       if (error || !data) return;
 
-      setChatId(data.telegram_chat_id ?? "");
-      setConnected(Boolean(data.telegram_chat_id));
+      const stored = data.telegram_chat_id ?? "";
+      setChatId(stored);
+      setSavedChatId(stored);
+      setConnected(Boolean(stored));
     }
 
     load();
   }, [fleetId]);
 
+  async function persistChatId(value: string) {
+    if (!fleetId) return false;
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("fleet_settings")
+      .update({ telegram_chat_id: value })
+      .eq("fleet_id", fleetId);
+    if (error) return false;
+    setSavedChatId(value);
+    setConnected(Boolean(value));
+    return true;
+  }
+
   async function handleSave() {
     if (!fleetId) return;
     setSaving(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase
-        .from("fleet_settings")
-        .update({ telegram_chat_id: chatId })
-        .eq("fleet_id", fleetId);
-
-      if (error) throw error;
-
-      setConnected(Boolean(chatId));
+      const ok = await persistChatId(chatId);
+      if (!ok) throw new Error("save failed");
       toast.success("Telegram settings saved");
     } catch {
       toast.error("Failed to save settings");
@@ -67,9 +76,19 @@ export function TelegramTab() {
 
     setSending(true);
     try {
+      // The edge function now reads chat_id from fleet_settings, so save first
+      // if the user has edited the value without hitting Save.
+      if (chatId !== savedChatId) {
+        const ok = await persistChatId(chatId);
+        if (!ok) {
+          toast.error("Could not save Chat ID. Please try Save first.");
+          return;
+        }
+      }
+
       const supabase = createClient();
       const { error } = await supabase.functions.invoke("fleet-telegram-test", {
-        body: { chat_id: chatId },
+        body: {},
       });
 
       if (error) throw error;
