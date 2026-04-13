@@ -10,7 +10,6 @@ import { PageHeader } from "@/components/shared/page-header"
 import { DataTable, type ColumnDef } from "@/components/shared/data-table"
 import { PaginationControls } from "@/components/shared/pagination-controls"
 import { Button } from "@/components/ui/button"
-import { OwnerOnlyGuard } from "@/components/shared/owner-only-guard"
 import { ContractTripFormSheet } from "@/components/contract/contract-trip-form-sheet"
 import { Badge } from "@/components/ui/badge"
 import type { ContractTrip } from "@/types/database"
@@ -30,12 +29,10 @@ type TripRow = ContractTrip & {
   vehicle: { registration: string } | null
 }
 
+// Drivers can also access this page — RLS scopes the query to their own
+// trips, and the form sheet locks driver + vehicle for isDriver.
 export default function ContractTripsPage() {
-  return (
-    <OwnerOnlyGuard>
-      <ContractTripsContent />
-    </OwnerOnlyGuard>
-  )
+  return <ContractTripsContent />
 }
 
 function ContractTripsContent() {
