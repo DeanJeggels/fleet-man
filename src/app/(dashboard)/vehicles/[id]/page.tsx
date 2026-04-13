@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VehicleHeader } from "@/components/vehicles/vehicle-header";
+import { VehicleFormSheet } from "@/components/vehicles/vehicle-form-sheet";
 import { OverviewTab } from "@/components/vehicles/tabs/overview-tab";
 import { MaintenanceTab } from "@/components/vehicles/tabs/maintenance-tab";
 import { TripsTab } from "@/components/vehicles/tabs/trips-tab";
@@ -25,46 +26,51 @@ export default function VehicleDetailPage({
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [currentDriverName, setCurrentDriverName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editSheetOpen, setEditSheetOpen] = useState(false);
+  const [driverHistoryVersion, setDriverHistoryVersion] = useState(0);
+
+  const fetchVehicle = useCallback(async () => {
+    if (!fleetId) return;
+    const supabase = createClient();
+
+    const { data } = await supabase
+      .from("vehicles")
+      .select("*")
+      .eq("id", id)
+      .eq("fleet_id", fleetId!)
+      .single();
+
+    if (data) {
+      setVehicle(data);
+
+      // Fetch current driver assignment
+      const { data: assignment } = await supabase
+        .from("vehicle_driver_assignments")
+        .select("driver:drivers(first_name, last_name)")
+        .eq("vehicle_id", id)
+        .eq("fleet_id", fleetId!)
+        .is("unassigned_at", null)
+        .order("assigned_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (assignment?.driver) {
+        const driver = assignment.driver as unknown as {
+          first_name: string;
+          last_name: string;
+        };
+        setCurrentDriverName(`${driver.first_name} ${driver.last_name}`);
+      } else {
+        setCurrentDriverName(null);
+      }
+    }
+
+    setLoading(false);
+  }, [id, fleetId]);
 
   useEffect(() => {
-    if (!fleetId) return;
-    async function fetchVehicle() {
-      const supabase = createClient();
-
-      const { data } = await supabase
-        .from("vehicles")
-        .select("*")
-        .eq("id", id)
-        .eq("fleet_id", fleetId!)
-        .single();
-
-      if (data) {
-        setVehicle(data);
-
-        // Fetch current driver assignment
-        const { data: assignment } = await supabase
-          .from("vehicle_driver_assignments")
-          .select("driver:drivers(first_name, last_name)")
-          .eq("vehicle_id", id)
-          .eq("fleet_id", fleetId!)
-          .is("unassigned_at", null)
-          .order("assigned_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (assignment?.driver) {
-          const driver = assignment.driver as unknown as {
-            first_name: string;
-            last_name: string;
-          };
-          setCurrentDriverName(`${driver.first_name} ${driver.last_name}`);
-        }
-      }
-
-      setLoading(false);
-    }
     fetchVehicle();
-  }, [id, fleetId]);
+  }, [fetchVehicle]);
 
   if (loading) {
     return (
@@ -84,7 +90,18 @@ export default function VehicleDetailPage({
 
   return (
     <div className="space-y-6">
-      <VehicleHeader vehicle={vehicle} currentDriverName={currentDriverName} />
+      <VehicleHeader
+        vehicle={vehicle}
+        currentDriverName={currentDriverName}
+        onEdit={() => setEditSheetOpen(true)}
+      />
+
+      <VehicleFormSheet
+        open={editSheetOpen}
+        onOpenChange={setEditSheetOpen}
+        vehicle={vehicle}
+        onSaved={fetchVehicle}
+      />
 
       <Tabs defaultValue="overview">
         <TabsList className="overflow-x-auto scrollbar-none scroll-smooth snap-x snap-mandatory">
@@ -126,7 +143,15 @@ export default function VehicleDetailPage({
         </TabsContent>
 
         <TabsContent value="drivers">
-          <DriverHistoryTab vehicleId={vehicle.id} />
+          <DriverHistoryTab
+            vehicleId={vehicle.id}
+            vehicleCategory={vehicle.category}
+            refreshToken={driverHistoryVersion}
+            onChanged={() => {
+              setDriverHistoryVersion((v) => v + 1);
+              fetchVehicle();
+            }}
+          />
         </TabsContent>
       </Tabs>
     </div>
