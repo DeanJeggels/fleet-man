@@ -20,13 +20,40 @@ export default function SetPasswordPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        router.replace("/login");
-        return;
+    let settled = false;
+
+    // onAuthStateChange fires INITIAL_SESSION once the browser client has
+    // processed the URL hash (#access_token=... from Supabase's implicit flow)
+    // or any stored session. Wait for that event rather than racing getSession.
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (settled) return;
+      if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
+        settled = true;
+        if (session) {
+          setCheckingSession(false);
+        } else {
+          router.replace("/login");
+        }
       }
-      setCheckingSession(false);
     });
+
+    // Safety net: if nothing has fired after 4s, fall through
+    const timeoutId = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          setCheckingSession(false);
+        } else {
+          router.replace("/login");
+        }
+      });
+    }, 4000);
+
+    return () => {
+      sub.subscription.unsubscribe();
+      clearTimeout(timeoutId);
+    };
   }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
