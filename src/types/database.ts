@@ -525,6 +525,9 @@ export type Database = {
           uber_client_id: string | null
           uber_client_secret: string | null
           uber_org_uuid: string | null
+          bolt_company_id: string | null
+          bolt_client_id: string | null
+          bolt_client_secret: string | null
           updated_at: string
         }
         Insert: {
@@ -553,6 +556,9 @@ export type Database = {
           uber_client_id?: string | null
           uber_client_secret?: string | null
           uber_org_uuid?: string | null
+          bolt_company_id?: string | null
+          bolt_client_id?: string | null
+          bolt_client_secret?: string | null
           updated_at?: string
         }
         Update: {
@@ -581,6 +587,9 @@ export type Database = {
           uber_client_id?: string | null
           uber_client_secret?: string | null
           uber_org_uuid?: string | null
+          bolt_company_id?: string | null
+          bolt_client_id?: string | null
+          bolt_client_secret?: string | null
           updated_at?: string
         }
         Relationships: [
