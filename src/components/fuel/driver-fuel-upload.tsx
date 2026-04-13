@@ -49,6 +49,7 @@ export function DriverFuelUpload({ onSaved }: DriverFuelUploadProps) {
   const [state, setState] = useState<UploadState>("idle");
   const [fileName, setFileName] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [parseWarning, setParseWarning] = useState<string | null>(null);
   const [assignedVehicle, setAssignedVehicle] = useState<Vehicle | null>(null);
 
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
@@ -84,6 +85,7 @@ export function DriverFuelUpload({ onSaved }: DriverFuelUploadProps) {
     }
     setFileName(file.name);
     setErrorMsg(null);
+    setParseWarning(null);
     setState("uploading");
 
     try {
@@ -96,6 +98,8 @@ export function DriverFuelUpload({ onSaved }: DriverFuelUploadProps) {
         { body: formData }
       );
 
+      // Only treat these as hard failures — parse_error on a successful
+      // response is a warning, not a blocker.
       if (error || (data && data.error)) {
         const msg = await extractFunctionError(error, data);
         throw new Error(msg);
@@ -103,6 +107,7 @@ export function DriverFuelUpload({ onSaved }: DriverFuelUploadProps) {
 
       const url = (data?.receipt_url as string) || null;
       const parsedData = (data?.parsed as ParsedFuelReceipt) || null;
+      const parseErr = (data?.parse_error as string | null) || null;
 
       setReceiptUrl(url);
       setParsed(parsedData);
@@ -114,6 +119,18 @@ export function DriverFuelUpload({ onSaved }: DriverFuelUploadProps) {
         parsedData?.odometer_reading != null ? String(parsedData.odometer_reading) : ""
       );
       setReceiptDate(parsedData?.date ?? new Date().toISOString().slice(0, 10));
+
+      if (parseErr) {
+        setParseWarning(
+          "We couldn't read the receipt automatically. Please fill in the details manually."
+        );
+        console.warn("[fleet-fuel-receipt-upload] parse error:", parseErr);
+      } else if (parsedData && (parsedData.confidence ?? 0) < 0.4) {
+        setParseWarning(
+          "Low confidence parse — please double-check the values below before saving."
+        );
+      }
+
       setState("confirm");
     } catch (err) {
       console.error(err);
@@ -195,6 +212,7 @@ export function DriverFuelUpload({ onSaved }: DriverFuelUploadProps) {
     setOdometer("");
     setReceiptDate("");
     setErrorMsg(null);
+    setParseWarning(null);
     if (inputRef.current) inputRef.current.value = "";
   }
 
@@ -273,9 +291,15 @@ export function DriverFuelUpload({ onSaved }: DriverFuelUploadProps) {
 
         {state === "confirm" && (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Confirm the details we extracted. Edit if anything is wrong.
-            </p>
+            {parseWarning ? (
+              <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                {parseWarning}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Confirm the details we extracted. Edit if anything is wrong.
+              </p>
+            )}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Registration</Label>

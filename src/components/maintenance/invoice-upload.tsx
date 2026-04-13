@@ -64,6 +64,7 @@ export function InvoiceUpload({ onParsed }: InvoiceUploadProps) {
 
       clearInterval(progressInterval)
 
+      // Hard failure — function itself errored or refused the upload
       if (error || (data && data.error)) {
         const msg = await extractFunctionError(error, data)
         throw new Error(msg)
@@ -74,6 +75,27 @@ export function InvoiceUpload({ onParsed }: InvoiceUploadProps) {
 
       const invoiceUrl = (data?.invoice_url as string) || null
       const parsed = (data?.parsed as ParsedInvoice) || null
+      const parseErr = (data?.parse_error as string | null) || null
+
+      // Soft failure — upload succeeded but AI couldn't read the invoice.
+      // Surface it inline so the user knows to fill in manually instead
+      // of silently blank fields.
+      if (parseErr || !parsed) {
+        console.warn("[fleet-invoice-upload] parse error:", parseErr)
+        setState("error")
+        setErrorMsg(
+          parseErr
+            ? `AI couldn't read this invoice: ${parseErr}. Please enter the details manually below.`
+            : "AI couldn't read this invoice. Please enter the details manually below."
+        )
+        // Still forward the invoiceUrl so the user can keep the upload reference
+        onParsed({
+          invoiceUrl,
+          parsed: null,
+          lineItems: [],
+        })
+        return
+      }
 
       // Convert parsed line items to LineItem format
       const lineItems: LineItem[] =
