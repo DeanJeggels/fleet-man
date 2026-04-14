@@ -30,9 +30,6 @@ interface PlacesSuggestion {
   description: string;
 }
 
-const PLACES_API_KEY =
-  typeof process !== "undefined" ? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY : undefined;
-
 export function AreaMultiInput({
   value,
   onChange,
@@ -43,11 +40,14 @@ export function AreaMultiInput({
   const [suggestions, setSuggestions] = useState<PlacesSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  // Tracks whether the proxy ever returned status=DISABLED so we show the
+  // "type and Enter" hint without hammering the endpoint every keystroke.
+  const [placesDisabled, setPlacesDisabled] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch suggestions (debounced)
+  // Fetch suggestions (debounced) via /api/places/autocomplete proxy
   useEffect(() => {
-    if (!query.trim() || !PLACES_API_KEY) {
+    if (!query.trim() || placesDisabled) {
       setSuggestions([]);
       return;
     }
@@ -66,6 +66,11 @@ export function AreaMultiInput({
         const res = await fetch(url.toString());
         if (!res.ok) throw new Error(`Places API ${res.status}`);
         const body = await res.json();
+        if (body.status === "DISABLED") {
+          setPlacesDisabled(true);
+          setSuggestions([]);
+          return;
+        }
         if (body.status === "OK" && Array.isArray(body.predictions)) {
           setSuggestions(
             body.predictions.slice(0, 6).map((p: { place_id: string; description: string }) => ({
@@ -86,7 +91,7 @@ export function AreaMultiInput({
     }, 250);
 
     return () => clearTimeout(handle);
-  }, [query]);
+  }, [query, placesDisabled]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -190,8 +195,8 @@ export function AreaMultiInput({
         </div>
       )}
 
-      {/* Hint when Places is disabled */}
-      {!PLACES_API_KEY && (
+      {/* Hint when Places is disabled (proxy returned status=DISABLED) */}
+      {placesDisabled && (
         <p className="text-[11px] text-muted-foreground">
           Type an area and press Enter to add it. Google Places suggestions are disabled.
         </p>
