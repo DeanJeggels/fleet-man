@@ -98,6 +98,10 @@ export default function LoginPage() {
         <Link href="/privacy" className="hover:text-foreground transition-colors">
           Privacy Notice (POPIA)
         </Link>
+        <span className="mx-2">·</span>
+        <Link href="/terms" className="hover:text-foreground transition-colors">
+          Terms of Service
+        </Link>
       </p>
     </div>
   );

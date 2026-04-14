@@ -71,6 +71,25 @@ export function InvoicePDF({ invoice, client, trips, settings }: InvoicePDFProps
     .join(", ")
   const companyContact = [settings?.company_phone, settings?.company_email].filter(Boolean).join(" / ")
 
+  // VAT snapshot lives on the invoice (not pulled live from settings) so
+  // historical invoices stay accurate if the operator changes settings later.
+  // Existing pre-VAT invoices have vat_registered_snapshot=false and render
+  // exactly as before — no behaviour change.
+  const inv = invoice as ContractInvoice & {
+    vat_registered_snapshot?: boolean
+    vat_registration_number_snapshot?: string | null
+    vat_rate_snapshot?: number | null
+    vat_amount?: number | null
+    subtotal_excl_vat?: number | null
+  }
+  const isTaxInvoice = Boolean(inv.vat_registered_snapshot)
+  const vatRate = Number(inv.vat_rate_snapshot ?? 0.15)
+  const vatRatePct = Math.round(vatRate * 100)
+  const subtotalExcl = Number(inv.subtotal_excl_vat ?? invoice.total)
+  const vatAmount = Number(inv.vat_amount ?? 0)
+  const vatNumber = inv.vat_registration_number_snapshot ?? null
+
+  const docTitle = isTaxInvoice ? "TAX INVOICE" : "INVOICE"
   const periodLabel = `Service from ${fmtDate(invoice.service_period_start)} - ${fmtDate(invoice.service_period_end)}`
 
   return (
@@ -81,13 +100,17 @@ export function InvoicePDF({ invoice, client, trips, settings }: InvoicePDFProps
         {companyAddress && <Text style={styles.companyMeta}>{companyAddress}</Text>}
         {companyCityLine && <Text style={styles.companyMeta}>{companyCityLine}</Text>}
         {companyContact && <Text style={styles.companyMeta}>{companyContact}</Text>}
+        {isTaxInvoice && vatNumber && (
+          <Text style={styles.companyMeta}>VAT Reg: {vatNumber}</Text>
+        )}
 
         <View style={styles.spacer} />
 
+        <Text style={[styles.boldHead, { fontSize: 14 }]}>{docTitle}</Text>
         <Text style={styles.boldHead}>{periodLabel}</Text>
         <View style={styles.spacer} />
 
-        <Text style={styles.boldHead}>INVOICE TO:</Text>
+        <Text style={styles.boldHead}>{isTaxInvoice ? "TAX INVOICE TO:" : "INVOICE TO:"}</Text>
         <Text style={styles.toBlock}>{client.name}</Text>
         {client.address_line && <Text>{client.address_line}</Text>}
         {(client.city || client.province || client.postal_code) && (
@@ -127,10 +150,27 @@ export function InvoicePDF({ invoice, client, trips, settings }: InvoicePDFProps
         </View>
 
         {/* Total */}
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}></Text>
-          <Text style={styles.totalCell}>{zar.format(Number(invoice.total))}</Text>
-        </View>
+        {isTaxInvoice ? (
+          <>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Subtotal (excl VAT):</Text>
+              <Text style={styles.totalCell}>{zar.format(subtotalExcl)}</Text>
+            </View>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>VAT @ {vatRatePct}%:</Text>
+              <Text style={styles.totalCell}>{zar.format(vatAmount)}</Text>
+            </View>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Total (incl VAT):</Text>
+              <Text style={styles.totalCell}>{zar.format(Number(invoice.total))}</Text>
+            </View>
+          </>
+        ) : (
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}></Text>
+            <Text style={styles.totalCell}>{zar.format(Number(invoice.total))}</Text>
+          </View>
+        )}
 
         {/* Banking details */}
         <Text style={styles.bankingTitle}>BANKING DETAILS</Text>

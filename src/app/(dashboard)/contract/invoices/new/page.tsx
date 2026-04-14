@@ -132,6 +132,22 @@ function NewInvoiceContent() {
       vehicleReg = v?.registration ?? null
     }
 
+    // VAT snapshot — pulled from settings at invoice creation time so the
+    // PDF stays accurate even if the operator changes their VAT settings later.
+    const vatRegistered = Boolean(settings?.vat_registered)
+    const vatRate = Number(settings?.vat_rate ?? 0.15)
+    const vatRegistrationNumber = settings?.vat_registration_number ?? null
+    // The trip totals are treated as VAT-INCLUSIVE for VAT-registered operators
+    // (this is the most common SA fleet billing pattern). Subtotal excl VAT
+    // is back-calculated from the inclusive total.
+    const totalInclVat = totalAmount
+    const subtotalExclVat = vatRegistered
+      ? Math.round((totalInclVat / (1 + vatRate)) * 100) / 100
+      : totalInclVat
+    const vatAmount = vatRegistered
+      ? Math.round((totalInclVat - subtotalExclVat) * 100) / 100
+      : 0
+
     const { data: invoice, error: invoiceError } = await supabase
       .from("contract_invoices")
       .insert({
@@ -151,8 +167,14 @@ function NewInvoiceContent() {
         bank_account_number: settings?.bank_account_number ?? null,
         bank_branch_code: settings?.bank_branch_code ?? null,
         bank_account_holder: settings?.bank_account_holder ?? null,
-        subtotal: totalAmount,
-        total: totalAmount,
+        subtotal: subtotalExclVat,
+        total: totalInclVat,
+        // VAT snapshot fields
+        vat_registered_snapshot: vatRegistered,
+        vat_registration_number_snapshot: vatRegistrationNumber,
+        vat_rate_snapshot: vatRate,
+        vat_amount: vatAmount,
+        subtotal_excl_vat: subtotalExclVat,
       })
       .select("*")
       .single()

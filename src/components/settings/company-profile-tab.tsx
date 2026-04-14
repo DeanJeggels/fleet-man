@@ -30,6 +30,9 @@ export function CompanyProfileTab() {
   const [bankBranchCode, setBankBranchCode] = useState("")
   const [nextInvoiceNumber, setNextInvoiceNumber] = useState("1")
   const [hasIssuedInvoices, setHasIssuedInvoices] = useState(false)
+  const [vatRegistered, setVatRegistered] = useState(false)
+  const [vatRegistrationNumber, setVatRegistrationNumber] = useState("")
+  const [vatRate, setVatRate] = useState("0.15")
 
   useEffect(() => {
     if (!fleetId) return
@@ -62,6 +65,9 @@ export function CompanyProfileTab() {
         setBankAccountNumber(data.bank_account_number ?? "")
         setBankBranchCode(data.bank_branch_code ?? "")
         setNextInvoiceNumber(String(data.next_invoice_number ?? 1))
+        setVatRegistered(Boolean(data.vat_registered))
+        setVatRegistrationNumber(data.vat_registration_number ?? "")
+        setVatRate(String(data.vat_rate ?? 0.15))
       }
       setHasIssuedInvoices((invoiceCountRes.count ?? 0) > 0)
       setLoading(false)
@@ -83,6 +89,17 @@ export function CompanyProfileTab() {
       parsedNextNumber = n
     }
 
+    // Validate VAT
+    if (vatRegistered && !vatRegistrationNumber.trim()) {
+      toast.error("VAT registration number is required when VAT-registered is enabled.")
+      return
+    }
+    const parsedVatRate = Number(vatRate)
+    if (!isFinite(parsedVatRate) || parsedVatRate < 0 || parsedVatRate > 1) {
+      toast.error("VAT rate must be between 0 and 1 (e.g. 0.15 for 15%).")
+      return
+    }
+
     setSaving(true)
     const supabase = createClient()
     const { error } = await supabase
@@ -100,6 +117,9 @@ export function CompanyProfileTab() {
         bank_account_type: bankAccountType || null,
         bank_account_number: bankAccountNumber || null,
         bank_branch_code: bankBranchCode || null,
+        vat_registered: vatRegistered,
+        vat_registration_number: vatRegistered ? vatRegistrationNumber.trim() : null,
+        vat_rate: parsedVatRate,
         ...(parsedNextNumber != null ? { next_invoice_number: parsedNextNumber } : {}),
       })
       .eq("fleet_id", fleetId!)
@@ -245,14 +265,66 @@ export function CompanyProfileTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Privacy &amp; POPI</CardTitle>
+          <CardTitle>VAT (Tax Invoice)</CardTitle>
           <CardDescription>
-            Your platform privacy notice — published publicly so drivers and
-            anyone you invite can read what personal information is collected
-            and why before they consent.
+            Required by SARS (VAT Act §20) if your annual turnover exceeds
+            R1 million OR you voluntarily registered for VAT. When enabled,
+            invoices are marked &quot;TAX INVOICE&quot; and show your VAT number
+            plus the 15% VAT split.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={vatRegistered}
+              onChange={(e) => setVatRegistered(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 accent-primary"
+            />
+            We are VAT-registered with SARS
+          </label>
+
+          {vatRegistered && (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>VAT Registration Number</Label>
+                <Input
+                  value={vatRegistrationNumber}
+                  onChange={(e) => setVatRegistrationNumber(e.target.value)}
+                  placeholder="e.g. 4123456789"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>VAT Rate</Label>
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  max={1}
+                  step="0.01"
+                  value={vatRate}
+                  onChange={(e) => setVatRate(e.target.value)}
+                  placeholder="0.15"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Standard SA rate is 0.15 (15%). Use a decimal between 0 and 1.
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Legal documents</CardTitle>
+          <CardDescription>
+            Your platform privacy notice and terms of service. Both are
+            published publicly so drivers, clients and anyone you invite can
+            read them before they consent.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <Link
             href="/privacy"
             target="_blank"
@@ -260,6 +332,15 @@ export function CompanyProfileTab() {
             className="inline-flex items-center gap-1.5 text-sm font-medium text-[#3B82F6] hover:underline"
           >
             View Privacy Notice
+            <ExternalLink className="h-3.5 w-3.5" />
+          </Link>
+          <Link
+            href="/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#3B82F6] hover:underline"
+          >
+            View Terms of Service
             <ExternalLink className="h-3.5 w-3.5" />
           </Link>
         </CardContent>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Wifi, Bell, Send, List, Gauge, Building2, Users, BadgeCheck } from "lucide-react";
+import { Wifi, Bell, Send, List, Gauge, Building2, Users, BadgeCheck, Shield } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { UberApiTab } from "@/components/settings/uber-api-tab";
@@ -12,17 +12,36 @@ import { AlertThresholdsTab } from "@/components/settings/alert-thresholds-tab";
 import { CompanyProfileTab } from "@/components/settings/company-profile-tab";
 import { TeamMembersTab } from "@/components/settings/team-members-tab";
 import { DriverAccountsTab } from "@/components/settings/driver-accounts-tab";
+import { PrivacyRightsTab } from "@/components/settings/privacy-rights-tab";
 import { useFleet } from "@/contexts/fleet-context";
 
 export default function SettingsPage() {
   const { isOwnerOrAdmin } = useFleet();
 
-  // Members see only Notifications tab.
+  // Members + drivers see Notifications + Privacy Rights tabs.
   if (!isOwnerOrAdmin) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Settings" description="Manage your notification preferences" />
-        <NotificationsTab />
+        <PageHeader title="Settings" description="Notifications and your privacy rights" />
+        <Tabs defaultValue={0}>
+          <TabsList variant="line" className="w-full justify-start">
+            <TabsTrigger value={0}>
+              <Bell className="size-4" />
+              Notifications
+            </TabsTrigger>
+            <TabsTrigger value={1}>
+              <Shield className="size-4" />
+              <span className="sm:hidden">Privacy</span>
+              <span className="hidden sm:inline">Privacy &amp; Rights</span>
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value={0} className="mt-4">
+            <NotificationsTab />
+          </TabsContent>
+          <TabsContent value={1} className="mt-4">
+            <PrivacyRightsTab />
+          </TabsContent>
+        </Tabs>
       </div>
     );
   }
@@ -78,6 +97,11 @@ export default function SettingsPage() {
             <span className="sm:hidden">Alerts</span>
             <span className="hidden sm:inline">Alert Thresholds</span>
           </TabsTrigger>
+          <TabsTrigger value={9} className="snap-start shrink-0">
+            <Shield className="size-4" />
+            <span className="sm:hidden">Privacy</span>
+            <span className="hidden sm:inline">Privacy &amp; Rights</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value={0} className="mt-4">
@@ -106,6 +130,9 @@ export default function SettingsPage() {
         </TabsContent>
         <TabsContent value={8} className="mt-4">
           <AlertThresholdsTab />
+        </TabsContent>
+        <TabsContent value={9} className="mt-4">
+          <PrivacyRightsTab />
         </TabsContent>
       </Tabs>
     </div>
