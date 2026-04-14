@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Car, Loader2 } from "lucide-react";
@@ -39,7 +40,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="space-y-4 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
@@ -92,6 +93,12 @@ export default function LoginPage() {
           </form>
         </CardContent>
       </Card>
+
+      <p className="mt-6 text-center text-xs text-muted-foreground">
+        <Link href="/privacy" className="hover:text-foreground transition-colors">
+          Privacy Notice (POPIA)
+        </Link>
+      </p>
     </div>
   );
 }

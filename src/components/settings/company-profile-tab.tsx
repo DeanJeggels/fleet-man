@@ -1,7 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { toast } from "sonner"
+import { ExternalLink } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useFleet } from "@/contexts/fleet-context"
 import { Button } from "@/components/ui/button"
@@ -238,6 +240,28 @@ export function CompanyProfileTab() {
               </p>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Privacy &amp; POPI</CardTitle>
+          <CardDescription>
+            Your platform privacy notice — published publicly so drivers and
+            anyone you invite can read what personal information is collected
+            and why before they consent.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[#3B82F6] hover:underline"
+          >
+            View Privacy Notice
+            <ExternalLink className="h-3.5 w-3.5" />
+          </Link>
         </CardContent>
       </Card>
 
