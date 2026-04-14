@@ -56,12 +56,12 @@ export function AreaMultiInput({
       setLoading(true);
       try {
         const url = new URL(
-          "https://maps.googleapis.com/maps/api/place/autocomplete/json"
+          "/api/places/autocomplete",
+          typeof window !== "undefined" ? window.location.origin : ""
         );
         url.searchParams.set("input", query);
         url.searchParams.set("types", "geocode");
         url.searchParams.set("components", "country:za");
-        url.searchParams.set("key", PLACES_API_KEY!);
 
         const res = await fetch(url.toString());
         if (!res.ok) throw new Error(`Places API ${res.status}`);
