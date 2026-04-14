@@ -11,6 +11,8 @@ const supabaseHostname = supabaseUrl ? new URL(supabaseUrl).hostname : "";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  // Strip the X-Powered-By header to remove the Next.js fingerprint
+  poweredByHeader: false,
   images: {
     remotePatterns: supabaseHostname
       ? [
@@ -35,11 +37,13 @@ const nextConfig: NextConfig = {
           value: [
             "default-src 'self'",
             // unsafe-eval + wasm-unsafe-eval needed by @react-pdf/renderer; blob: for dynamic chunks
-            "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline' blob: https://maps.googleapis.com",
+            "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline' blob:",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-            `img-src 'self' data: blob: ${supabaseHttpHost} https://maps.googleapis.com https://maps.gstatic.com`.trim(),
-            // data: + blob: needed for @react-pdf/renderer internal font/WASM fetch
-            `connect-src 'self' data: blob: ${supabaseHttpHost} ${supabaseWsHost} https://maps.googleapis.com`.trim(),
+            `img-src 'self' data: blob: ${supabaseHttpHost}`.trim(),
+            // data: + blob: needed for @react-pdf/renderer internal font/WASM fetch.
+            // Google Maps is reached via the server-side /api/places/autocomplete proxy,
+            // never directly from the browser, so it doesn't need a CSP allowance.
+            `connect-src 'self' data: blob: ${supabaseHttpHost} ${supabaseWsHost}`.trim(),
             // data: needed for @react-pdf/renderer embedded Helvetica font
             "font-src 'self' data: https://fonts.gstatic.com",
             // @react-pdf/renderer spawns an internal worker from a blob URL on some paths
