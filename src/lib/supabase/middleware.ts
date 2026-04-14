@@ -7,6 +7,7 @@ const PUBLIC_PATHS = [
   "/login",
   "/auth/", // /auth/set-password and any future auth pages
   "/privacy", // POPI privacy notice — must be publicly readable
+  "/terms", // Terms of Service — must be publicly readable
   "/robots.txt",
   "/sitemap.xml",
 ];

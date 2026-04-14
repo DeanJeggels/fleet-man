@@ -19,6 +19,7 @@ export default function SetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [popiConsented, setPopiConsented] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -97,6 +98,10 @@ export default function SetPasswordPage() {
     }
     if (!popiConsented) {
       setError("Please confirm the POPI consent to continue.");
+      return;
+    }
+    if (!ageConfirmed) {
+      setError("You must confirm you are 18 or older.");
       return;
     }
 
@@ -214,7 +219,32 @@ export default function SetPasswordPage() {
                 >
                   Privacy Notice
                 </Link>{" "}
-                and the Protection of Personal Information Act (POPIA).
+                and{" "}
+                <Link
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#3B82F6] underline"
+                >
+                  Terms of Service
+                </Link>
+                , and the Protection of Personal Information Act (POPIA).
+              </span>
+            </label>
+
+            {/* POPI §34 — processing of children's personal information is
+                prohibited without parental consent. Confirming 18+ keeps us
+                clear of the children's data regime entirely. */}
+            <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={ageConfirmed}
+                onChange={(e) => setAgeConfirmed(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 accent-primary"
+                disabled={loading || success}
+              />
+              <span>
+                I confirm I am 18 years of age or older.
               </span>
             </label>
 
@@ -227,7 +257,7 @@ export default function SetPasswordPage() {
             <Button
               type="submit"
               className="w-full bg-[#3B82F6] hover:bg-[#2563EB] cursor-pointer"
-              disabled={loading || success || !popiConsented}
+              disabled={loading || success || !popiConsented || !ageConfirmed}
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

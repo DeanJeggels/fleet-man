@@ -146,8 +146,13 @@ export type Database = {
           service_period_start: string
           status: string
           subtotal: number
+          subtotal_excl_vat: number | null
           total: number
           updated_at: string
+          vat_amount: number | null
+          vat_rate_snapshot: number | null
+          vat_registered_snapshot: boolean
+          vat_registration_number_snapshot: string | null
           vehicle_id: string | null
           vehicle_registration_snapshot: string | null
         }
@@ -173,8 +178,13 @@ export type Database = {
           service_period_start: string
           status?: string
           subtotal?: number
+          subtotal_excl_vat?: number | null
           total?: number
           updated_at?: string
+          vat_amount?: number | null
+          vat_rate_snapshot?: number | null
+          vat_registered_snapshot?: boolean
+          vat_registration_number_snapshot?: string | null
           vehicle_id?: string | null
           vehicle_registration_snapshot?: string | null
         }
@@ -200,8 +210,13 @@ export type Database = {
           service_period_start?: string
           status?: string
           subtotal?: number
+          subtotal_excl_vat?: number | null
           total?: number
           updated_at?: string
+          vat_amount?: number | null
+          vat_rate_snapshot?: number | null
+          vat_registered_snapshot?: boolean
+          vat_registration_number_snapshot?: string | null
           vehicle_id?: string | null
           vehicle_registration_snapshot?: string | null
         }
@@ -544,6 +559,9 @@ export type Database = {
           bolt_company_id: string | null
           bolt_client_id: string | null
           bolt_client_secret: string | null
+          vat_rate: number
+          vat_registered: boolean
+          vat_registration_number: string | null
           updated_at: string
         }
         Insert: {
@@ -575,6 +593,9 @@ export type Database = {
           bolt_company_id?: string | null
           bolt_client_id?: string | null
           bolt_client_secret?: string | null
+          vat_rate?: number
+          vat_registered?: boolean
+          vat_registration_number?: string | null
           updated_at?: string
         }
         Update: {
@@ -606,6 +627,9 @@ export type Database = {
           bolt_company_id?: string | null
           bolt_client_id?: string | null
           bolt_client_secret?: string | null
+          vat_rate?: number
+          vat_registered?: boolean
+          vat_registration_number?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1388,6 +1412,10 @@ export type Database = {
       anonymise_driver: {
         Args: { target_driver_id: string }
         Returns: undefined
+      }
+      export_my_personal_data: {
+        Args: never
+        Returns: Record<string, unknown>
       }
       get_driver_bank_account: {
         Args: { target_driver_id: string }
