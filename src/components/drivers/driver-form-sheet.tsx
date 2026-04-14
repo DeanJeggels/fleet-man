@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useFleet } from "@/contexts/fleet-context";
 import { toast } from "sonner";
@@ -56,7 +57,16 @@ export function DriverFormSheet({
 }: DriverFormSheetProps) {
   const supabase = createClient();
   const { fleetId, isOwnerOrAdmin } = useFleet();
+  const queryClient = useQueryClient();
   const isEdit = !!driver;
+
+  // Invalidate both drivers and vehicles lists so the assigned-vehicle /
+  // current-driver columns stay consistent across the app after any change
+  // originating from this form sheet.
+  function invalidateDriverVehicleQueries() {
+    queryClient.invalidateQueries({ queryKey: ["drivers", fleetId] });
+    queryClient.invalidateQueries({ queryKey: ["vehicles", fleetId] });
+  }
 
   const [saving, setSaving] = useState(false);
   const [archiving, setArchiving] = useState(false);
@@ -299,6 +309,7 @@ export function DriverFormSheet({
 
     setSaving(false);
     toast.success(isEdit ? "Driver updated" : "Driver added");
+    invalidateDriverVehicleQueries();
     onOpenChange(false);
     onSaved();
   }
@@ -342,6 +353,7 @@ export function DriverFormSheet({
     }
 
     toast.success("Driver archived.");
+    invalidateDriverVehicleQueries();
     onOpenChange(false);
     onSaved();
   }
@@ -375,6 +387,7 @@ export function DriverFormSheet({
     }
 
     toast.success("Driver deleted.");
+    invalidateDriverVehicleQueries();
     onOpenChange(false);
     onSaved();
   }

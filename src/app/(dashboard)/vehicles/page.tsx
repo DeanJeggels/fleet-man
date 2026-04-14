@@ -17,9 +17,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { useFleet } from "@/contexts/fleet-context";
 
 type VehicleWithDriver = Vehicle & {
-  vehicle_driver_assignments: {
-    driver: { first_name: string; last_name: string } | null;
-  }[];
+  current_driver: { first_name: string; last_name: string } | null;
 };
 
 const STATUS_FILTERS: { label: string; value: VehicleStatus | "all" }[] = [
@@ -50,15 +48,33 @@ export default function VehiclesPage() {
     enabled: !!fleetId,
     queryFn: async () => {
       const supabase = createClient();
-      const { data, error } = await supabase
-        .from("vehicles")
-        .select(
-          "*, vehicle_driver_assignments(driver:drivers(first_name, last_name))"
-        )
-        .eq("fleet_id", fleetId!)
-        .order("registration");
-      if (error) throw error;
-      return (data ?? []) as unknown as VehicleWithDriver[];
+      // Two queries + client-side join: we need the ACTIVE assignment only
+      // (unassigned_at IS NULL) which is hard to express via embedded joins.
+      const [vehiclesRes, assignmentsRes] = await Promise.all([
+        supabase
+          .from("vehicles")
+          .select("*")
+          .eq("fleet_id", fleetId!)
+          .order("registration"),
+        supabase
+          .from("vehicle_driver_assignments")
+          .select("vehicle_id, driver:drivers(first_name, last_name)")
+          .eq("fleet_id", fleetId!)
+          .is("unassigned_at", null),
+      ]);
+      if (vehiclesRes.error) throw vehiclesRes.error;
+      if (assignmentsRes.error) throw assignmentsRes.error;
+
+      const driverByVehicle = new Map<string, { first_name: string; last_name: string } | null>();
+      for (const a of assignmentsRes.data ?? []) {
+        const driver = a.driver as unknown as { first_name: string; last_name: string } | null;
+        driverByVehicle.set(a.vehicle_id as string, driver);
+      }
+
+      return (vehiclesRes.data ?? []).map((v) => ({
+        ...v,
+        current_driver: driverByVehicle.get(v.id) ?? null,
+      })) as VehicleWithDriver[];
     },
   });
 
@@ -87,9 +103,8 @@ export default function VehiclesPage() {
   }, [vehicles, statusFilter, categoryFilter, search]);
 
   function getDriverName(v: VehicleWithDriver): string {
-    const assignment = v.vehicle_driver_assignments?.[0];
-    if (!assignment?.driver) return "-";
-    return `${assignment.driver.first_name} ${assignment.driver.last_name}`;
+    if (!v.current_driver) return "-";
+    return `${v.current_driver.first_name} ${v.current_driver.last_name}`;
   }
 
   const columns: ColumnDef<Record<string, unknown>>[] = [

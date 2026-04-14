@@ -215,6 +215,8 @@ function PayoutsContent() {
       <PageHeader
         title="Driver Payouts"
         description="Commission runs per driver per period"
+        backHref="/contract"
+        backLabel="Back to Contract"
         action={
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger

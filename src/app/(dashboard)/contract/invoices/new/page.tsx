@@ -196,7 +196,12 @@ function NewInvoiceContent() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="New Invoice" description="Bundle uninvoiced trips into a new client invoice" />
+      <PageHeader
+        title="New Invoice"
+        description="Bundle uninvoiced trips into a new client invoice"
+        backHref="/contract/invoices"
+        backLabel="Back to Invoices"
+      />
 
       <Card>
         <CardHeader>

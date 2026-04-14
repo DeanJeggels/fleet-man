@@ -107,6 +107,8 @@ function ContractInvoicesContent() {
       <PageHeader
         title="Contract Invoices"
         description="Generate and track client invoices"
+        backHref="/contract"
+        backLabel="Back to Contract"
         action={
           <Button onClick={() => router.push("/contract/invoices/new")} className="cursor-pointer">
             <Plus className="mr-1.5 h-4 w-4" />

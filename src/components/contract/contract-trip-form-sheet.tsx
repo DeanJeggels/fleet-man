@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { AreaMultiInput } from "@/components/shared/area-multi-input"
 import type { ContractTrip, ContractClient, Vehicle, Driver } from "@/types/database"
 
 interface ContractTripFormSheetProps {
@@ -52,7 +53,9 @@ export function ContractTripFormSheet({
   const [tripTime, setTripTime] = useState(trip?.trip_time ?? "")
   const [companyLabel, setCompanyLabel] = useState(trip?.company_label ?? "")
   const [coordinator, setCoordinator] = useState(trip?.coordinator ?? "")
-  const [area, setArea] = useState(trip?.area ?? "")
+  const [areas, setAreas] = useState<string[]>(
+    (trip?.areas && trip.areas.length > 0) ? trip.areas : (trip?.area ? [trip.area] : [])
+  )
   const [pax, setPax] = useState(trip?.pax != null ? String(trip.pax) : "")
   const [amount, setAmount] = useState(trip?.amount != null ? String(trip.amount) : "")
   const [notes, setNotes] = useState(trip?.notes ?? "")
@@ -104,7 +107,13 @@ export function ContractTripFormSheet({
       setTripTime(trip?.trip_time ?? "")
       setCompanyLabel(trip?.company_label ?? "")
       setCoordinator(trip?.coordinator ?? "")
-      setArea(trip?.area ?? "")
+      setAreas(
+        trip?.areas && trip.areas.length > 0
+          ? trip.areas
+          : trip?.area
+            ? [trip.area]
+            : []
+      )
       setPax(trip?.pax != null ? String(trip.pax) : "")
       setAmount(trip?.amount != null ? String(trip.amount) : "")
       setNotes(trip?.notes ?? "")
@@ -125,19 +134,30 @@ export function ContractTripFormSheet({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!clientId) {
+
+    // Owners must pick a client; drivers don't see the field and leave it
+    // null for the owner to backfill later.
+    if (!isDriver && !clientId) {
       toast.error("Client is required")
       return
     }
-    if (!area.trim()) {
-      toast.error("Area is required")
+    if (areas.length === 0) {
+      toast.error("At least one area is required")
       return
     }
-    const amountNum = Number(amount)
-    if (!isFinite(amountNum) || amountNum < 0) {
-      toast.error("Amount must be a positive number")
-      return
+
+    // Amount: owners must enter it; drivers leave it blank and the owner
+    // fills it in when billing.
+    let amountNum: number | null = null
+    if (!isDriver) {
+      const n = Number(amount)
+      if (!isFinite(n) || n < 0) {
+        toast.error("Amount must be a positive number")
+        return
+      }
+      amountNum = n
     }
+
     const paxNum = pax ? Number(pax) : null
     if (paxNum !== null && (!Number.isInteger(paxNum) || paxNum < 0)) {
       toast.error("Pax must be a whole number")
@@ -151,18 +171,23 @@ export function ContractTripFormSheet({
     setSaving(true)
     const supabase = createClient()
 
+    const cleanAreas = areas.map((a) => a.trim().slice(0, 200)).filter(Boolean)
+
     const payload = {
-      client_id: clientId,
+      client_id: isDriver ? null : clientId || null,
       vehicle_id: vehicleId || null,
       driver_id: driverId || null,
       trip_date: tripDate,
       trip_time: tripTime || null,
       company_label: companyLabel.trim().slice(0, 100) || null,
       coordinator: coordinator.trim().slice(0, 100) || null,
-      area: area.trim().slice(0, 200),
+      // Store both columns for now: `area` (legacy TEXT) gets the first
+      // entry for backward compat, `areas` holds the full array.
+      area: cleanAreas[0] ?? null,
+      areas: cleanAreas,
       pax: paxNum,
       amount: amountNum,
-      commission_amount: commissionAmount,
+      commission_amount: isDriver ? null : commissionAmount,
       notes: notes.trim().slice(0, 1000) || null,
     }
 
@@ -211,25 +236,28 @@ export function ContractTripFormSheet({
         </SheetHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-4 px-4 overflow-y-auto">
-          <div className="space-y-1.5">
-            <Label htmlFor="client">Client *</Label>
-            <Select value={clientId} onValueChange={(v) => setClientId(v ?? "")}>
-              <SelectTrigger id="client" className="w-full">
-                {clientLabel ? (
-                  <span className="flex flex-1 text-left truncate">{clientLabel}</span>
-                ) : (
-                  <SelectValue placeholder="Select client" />
-                )}
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Client picker is hidden for drivers — owner assigns/bills later. */}
+          {!isDriver && (
+            <div className="space-y-1.5">
+              <Label htmlFor="client">Client *</Label>
+              <Select value={clientId} onValueChange={(v) => setClientId(v ?? "")}>
+                <SelectTrigger id="client" className="w-full">
+                  {clientLabel ? (
+                    <span className="flex flex-1 text-left truncate">{clientLabel}</span>
+                  ) : (
+                    <SelectValue placeholder="Select client" />
+                  )}
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {isDriver ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -333,17 +361,15 @@ export function ContractTripFormSheet({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="area">Area *</Label>
-            <Input
-              id="area"
-              value={area}
-              onChange={(e) => setArea(e.target.value)}
-              placeholder="e.g. Athlone"
-              required
+            <Label>Areas *</Label>
+            <AreaMultiInput
+              value={areas}
+              onChange={setAreas}
+              placeholder="Start typing an area..."
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className={isDriver ? "space-y-1.5" : "grid grid-cols-2 gap-3"}>
             <div className="space-y-1.5">
               <Label htmlFor="pax">Pax</Label>
               <Input
@@ -356,20 +382,23 @@ export function ContractTripFormSheet({
                 placeholder="e.g. 4"
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="amount">Amount (ZAR) *</Label>
-              <Input
-                id="amount"
-                type="number"
-                inputMode="decimal"
-                min={0}
-                step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-                placeholder="e.g. 300"
-              />
-            </div>
+            {/* Amount is hidden for drivers — owner sets it at billing time. */}
+            {!isDriver && (
+              <div className="space-y-1.5">
+                <Label htmlFor="amount">Amount (ZAR) *</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step="0.01"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  required
+                  placeholder="e.g. 300"
+                />
+              </div>
+            )}
           </div>
 
           <div className="space-y-1.5">

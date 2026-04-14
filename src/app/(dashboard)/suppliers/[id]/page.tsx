@@ -153,12 +153,8 @@ export default function SupplierDetailPage() {
       <PageHeader
         title={supplier.name}
         description="Supplier details and maintenance history"
-        action={
-          <Button variant="outline" onClick={() => router.push("/suppliers")}>
-            <ArrowLeft className="mr-1.5 h-4 w-4" />
-            Back
-          </Button>
-        }
+        backHref="/suppliers"
+        backLabel="Back to Suppliers"
       />
 
       {/* Info card + KPI */}

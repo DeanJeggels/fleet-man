@@ -17,9 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { DriverFormSheet } from "@/components/drivers/driver-form-sheet";
 
 type DriverWithAssignment = Driver & {
-  vehicle_driver_assignments: {
-    vehicle: { registration: string } | null;
-  }[];
+  current_vehicle: { registration: string } | null;
 };
 
 function LicenseExpiryBadge({ expiry }: { expiry: string }) {
@@ -65,15 +63,32 @@ export default function DriversPage() {
     enabled: !!fleetId,
     queryFn: async () => {
       const supabase = createClient();
-      const { data, error } = await supabase
-        .from("drivers")
-        .select(
-          "*, vehicle_driver_assignments(vehicle:vehicles(registration))"
-        )
-        .eq("fleet_id", fleetId!)
-        .order("last_name");
-      if (error) throw error;
-      return (data ?? []) as DriverWithAssignment[];
+      // Two queries + client-side join: need only ACTIVE assignments.
+      const [driversRes, assignmentsRes] = await Promise.all([
+        supabase
+          .from("drivers")
+          .select("*")
+          .eq("fleet_id", fleetId!)
+          .order("last_name"),
+        supabase
+          .from("vehicle_driver_assignments")
+          .select("driver_id, vehicle:vehicles(registration)")
+          .eq("fleet_id", fleetId!)
+          .is("unassigned_at", null),
+      ]);
+      if (driversRes.error) throw driversRes.error;
+      if (assignmentsRes.error) throw assignmentsRes.error;
+
+      const vehicleByDriver = new Map<string, { registration: string } | null>();
+      for (const a of assignmentsRes.data ?? []) {
+        const vehicle = a.vehicle as unknown as { registration: string } | null;
+        vehicleByDriver.set(a.driver_id as string, vehicle);
+      }
+
+      return (driversRes.data ?? []).map((d) => ({
+        ...d,
+        current_vehicle: vehicleByDriver.get(d.id) ?? null,
+      })) as DriverWithAssignment[];
     },
   });
 
@@ -163,14 +178,10 @@ export default function DriversPage() {
       {
         key: "vehicle",
         header: "Assigned Vehicle",
-        render: (row) => {
-          const active = row.vehicle_driver_assignments?.find(
-            (a) => a.vehicle
-          );
-          return active?.vehicle?.registration ?? (
+        render: (row) =>
+          row.current_vehicle?.registration ?? (
             <span className="text-muted-foreground">Unassigned</span>
-          );
-        },
+          ),
       },
       {
         key: "phone",
