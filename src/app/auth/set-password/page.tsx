@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Car, Loader2, Lock } from "lucide-react";
@@ -9,10 +10,15 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+// Bumped whenever the privacy notice changes — stored on profiles_fleet so
+// we can show a re-consent prompt to existing users on a major revision.
+const POPI_CONSENT_VERSION = "2026-04-14";
+
 export default function SetPasswordPage() {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [popiConsented, setPopiConsented] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -89,6 +95,10 @@ export default function SetPasswordPage() {
       setError("Passwords do not match.");
       return;
     }
+    if (!popiConsented) {
+      setError("Please confirm the POPI consent to continue.");
+      return;
+    }
 
     setLoading(true);
     const supabase = createClient();
@@ -99,6 +109,25 @@ export default function SetPasswordPage() {
       setError(updateError.message);
       setLoading(false);
       return;
+    }
+
+    // Record data-subject-attested POPI consent against the user's profile row.
+    // RLS allows a user to UPDATE their own profiles_fleet row (own_memberships_read
+    // covers SELECT; the consolidated update policy lets the user update their
+    // own row). Failing here is non-fatal — surface a warning but still continue
+    // so the user isn't locked out at this final step.
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { error: consentErr } = await supabase
+        .from("profiles_fleet")
+        .update({
+          popi_consented_at: new Date().toISOString(),
+          popi_consent_version: POPI_CONSENT_VERSION,
+        })
+        .eq("user_id", user.id);
+      if (consentErr) {
+        console.warn("[set-password] could not persist POPI consent:", consentErr);
+      }
     }
 
     setSuccess(true);
@@ -164,6 +193,31 @@ export default function SetPasswordPage() {
                 />
               </div>
             </div>
+            {/* POPI Act consent — required by §11 (consent must be from the data subject) */}
+            <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={popiConsented}
+                onChange={(e) => setPopiConsented(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 accent-primary"
+                disabled={loading || success}
+              />
+              <span>
+                I consent to Fleet Manager processing my personal information
+                (name, contact details, license, vehicle, fuel and trip records)
+                for the purpose of fleet management, in accordance with the{" "}
+                <Link
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#3B82F6] underline"
+                >
+                  Privacy Notice
+                </Link>{" "}
+                and the Protection of Personal Information Act (POPIA).
+              </span>
+            </label>
+
             {error && <p className="text-sm text-destructive">{error}</p>}
             {success && (
               <p className="text-sm text-green-600">
@@ -173,7 +227,7 @@ export default function SetPasswordPage() {
             <Button
               type="submit"
               className="w-full bg-[#3B82F6] hover:bg-[#2563EB] cursor-pointer"
-              disabled={loading || success}
+              disabled={loading || success || !popiConsented}
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

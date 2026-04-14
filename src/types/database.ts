@@ -395,10 +395,14 @@ export type Database = {
           },
         ]
       }
+      // (profiles_fleet table types are below; popi_consented_at + popi_consent_version
+      //  added by migration 30 — the `Database` aliases at the bottom are kept manually.)
       drivers: {
         Row: {
           anonymised_at: string | null
-          bank_account_number: string | null
+          // bank_account_number is encrypted at rest in `bank_account_enc`.
+          // Read via get_driver_bank_account RPC, write via set_driver_bank_account RPC.
+          bank_account_enc: string | null
           category: Database["public"]["Enums"]["fleet_category"]
           commission_per_trip: number | null
           consented_at: string | null
@@ -418,7 +422,7 @@ export type Database = {
         }
         Insert: {
           anonymised_at?: string | null
-          bank_account_number?: string | null
+          bank_account_enc?: string | null
           category?: Database["public"]["Enums"]["fleet_category"]
           commission_per_trip?: number | null
           consented_at?: string | null
@@ -438,7 +442,7 @@ export type Database = {
         }
         Update: {
           anonymised_at?: string | null
-          bank_account_number?: string | null
+          bank_account_enc?: string | null
           category?: Database["public"]["Enums"]["fleet_category"]
           commission_per_trip?: number | null
           consented_at?: string | null
@@ -1010,6 +1014,8 @@ export type Database = {
           driver_id: string | null
           fleet_id: string
           id: string
+          popi_consent_version: string | null
+          popi_consented_at: string | null
           role: string
           user_id: string
         }
@@ -1019,6 +1025,8 @@ export type Database = {
           driver_id?: string | null
           fleet_id: string
           id?: string
+          popi_consent_version?: string | null
+          popi_consented_at?: string | null
           role?: string
           user_id: string
         }
@@ -1028,6 +1036,8 @@ export type Database = {
           driver_id?: string | null
           fleet_id?: string
           id?: string
+          popi_consent_version?: string | null
+          popi_consented_at?: string | null
           role?: string
           user_id?: string
         }
@@ -1375,9 +1385,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      anonymise_driver: {
+        Args: { target_driver_id: string }
+        Returns: undefined
+      }
+      get_driver_bank_account: {
+        Args: { target_driver_id: string }
+        Returns: string | null
+      }
       is_fleet_owner_or_admin: {
         Args: { target_fleet_id: string }
         Returns: boolean
+      }
+      set_driver_bank_account: {
+        Args: { target_driver_id: string; plaintext: string | null }
+        Returns: undefined
       }
       user_fleet_ids: { Args: never; Returns: string[] }
     }

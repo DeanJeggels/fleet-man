@@ -105,21 +105,17 @@ export default function DriversPage() {
   }
 
   async function handleAnonymise(driverId: string) {
-    if (!window.confirm("Are you sure you want to anonymise this driver's data? This action cannot be undone.")) return;
-    const { error } = await supabase
-      .from("drivers")
-      .update({
-        first_name: "Removed",
-        last_name: "Removed",
-        license_number: "REDACTED",
-        email: "",
-        phone: "",
-        notes: "",
-        status: "inactive" as const,
-        anonymised_at: new Date().toISOString(),
-      })
-      .eq("id", driverId)
-      .eq("fleet_id", fleetId!);
+    if (
+      !window.confirm(
+        "Permanently anonymise this driver's personal information? This clears their name, license, contact, bank details AND scrubs every historical audit log entry containing their data. The driver row itself stays so existing trips/invoices/payouts keep their references. This action cannot be undone."
+      )
+    )
+      return;
+
+    // Server-side RPC handles auth check, drivers UPDATE, and audit_logs scrub
+    const { error } = await supabase.rpc("anonymise_driver", {
+      target_driver_id: driverId,
+    });
     if (error) {
       console.error(error);
       toast.error("Failed to anonymise driver data.");
