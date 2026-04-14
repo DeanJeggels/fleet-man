@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, use, useCallback } from "react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { VehicleHeader } from "@/components/vehicles/vehicle-header";
@@ -90,6 +92,14 @@ export default function VehicleDetailPage({
 
   return (
     <div className="space-y-6">
+      <Link
+        href="/vehicles"
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Vehicles
+      </Link>
+
       <VehicleHeader
         vehicle={vehicle}
         currentDriverName={currentDriverName}

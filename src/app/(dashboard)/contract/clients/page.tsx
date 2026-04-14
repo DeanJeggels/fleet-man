@@ -73,6 +73,8 @@ function ContractClientsContent() {
       <PageHeader
         title="Contract Clients"
         description="Companies you bill for contract work"
+        backHref="/contract"
+        backLabel="Back to Contract"
         action={
           <Button
             onClick={() => {

@@ -99,7 +99,10 @@ function ContractTripsContent() {
       {
         key: "client",
         header: "Client",
-        render: (row) => row.client?.name ?? "—",
+        render: (row) =>
+          row.client?.name ?? (
+            <span className="text-muted-foreground text-xs">Pending assignment</span>
+          ),
       },
       {
         key: "driver",
@@ -122,15 +125,28 @@ function ContractTripsContent() {
         header: "Co-ordinator",
         render: (row) => row.coordinator ?? "—",
       },
-      { key: "area", header: "Area" },
+      {
+        key: "areas",
+        header: "Areas",
+        render: (row) => {
+          const list = row.areas && row.areas.length > 0 ? row.areas : row.area ? [row.area] : []
+          if (list.length === 0) return "—"
+          return (
+            <span className="text-sm">{list.join(", ")}</span>
+          )
+        },
+      },
       { key: "pax", header: "Pax", render: (row) => row.pax ?? "—" },
       {
         key: "amount",
         header: "Amount",
         sortable: true,
-        render: (row) => (
-          <span className="font-mono">{zar.format(Number(row.amount))}</span>
-        ),
+        render: (row) =>
+          row.amount != null ? (
+            <span className="font-mono">{zar.format(Number(row.amount))}</span>
+          ) : (
+            <span className="text-muted-foreground text-xs">Pending billing</span>
+          ),
       },
       {
         key: "invoice_id",
@@ -151,6 +167,8 @@ function ContractTripsContent() {
       <PageHeader
         title="Contract Trips"
         description="Log and view individual trips"
+        backHref="/contract"
+        backLabel="Back to Contract"
         action={
           <Button
             onClick={() => {

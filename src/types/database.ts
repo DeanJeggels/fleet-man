@@ -238,9 +238,10 @@ export type Database = {
       }
       contract_trips: {
         Row: {
-          amount: number
-          area: string
-          client_id: string
+          amount: number | null
+          area: string | null
+          areas: string[] | null
+          client_id: string | null
           commission_amount: number | null
           company_label: string | null
           coordinator: string | null
@@ -257,9 +258,10 @@ export type Database = {
           vehicle_id: string | null
         }
         Insert: {
-          amount: number
-          area: string
-          client_id: string
+          amount?: number | null
+          area?: string | null
+          areas?: string[] | null
+          client_id?: string | null
           commission_amount?: number | null
           company_label?: string | null
           coordinator?: string | null
@@ -276,9 +278,10 @@ export type Database = {
           vehicle_id?: string | null
         }
         Update: {
-          amount?: number
-          area?: string
-          client_id?: string
+          amount?: number | null
+          area?: string | null
+          areas?: string[] | null
+          client_id?: string | null
           commission_amount?: number | null
           company_label?: string | null
           coordinator?: string | null

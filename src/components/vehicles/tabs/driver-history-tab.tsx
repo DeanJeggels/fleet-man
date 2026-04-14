@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ export function DriverHistoryTab({
   onChanged,
 }: DriverHistoryTabProps) {
   const { fleetId, isOwnerOrAdmin } = useFleet();
+  const queryClient = useQueryClient();
   const [data, setData] = useState<AssignmentRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -127,6 +129,8 @@ export function DriverHistoryTab({
     }
 
     toast.success("Driver assigned.");
+    queryClient.invalidateQueries({ queryKey: ["drivers", fleetId] });
+    queryClient.invalidateQueries({ queryKey: ["vehicles", fleetId] });
     setDialogOpen(false);
     setSelectedDriverId("");
     onChanged?.();
@@ -148,6 +152,8 @@ export function DriverHistoryTab({
       return;
     }
     toast.success("Driver unassigned.");
+    queryClient.invalidateQueries({ queryKey: ["drivers", fleetId] });
+    queryClient.invalidateQueries({ queryKey: ["vehicles", fleetId] });
     onChanged?.();
   }
 

@@ -26,17 +26,26 @@ export function CompanyProfileTab() {
   const [bankAccountType, setBankAccountType] = useState("")
   const [bankAccountNumber, setBankAccountNumber] = useState("")
   const [bankBranchCode, setBankBranchCode] = useState("")
+  const [nextInvoiceNumber, setNextInvoiceNumber] = useState("1")
+  const [hasIssuedInvoices, setHasIssuedInvoices] = useState(false)
 
   useEffect(() => {
     if (!fleetId) return
     async function load() {
       const supabase = createClient()
-      const { data } = await supabase
-        .from("fleet_settings")
-        .select("*")
-        .eq("fleet_id", fleetId!)
-        .single()
+      const [settingsRes, invoiceCountRes] = await Promise.all([
+        supabase
+          .from("fleet_settings")
+          .select("*")
+          .eq("fleet_id", fleetId!)
+          .single(),
+        supabase
+          .from("contract_invoices")
+          .select("id", { count: "exact", head: true })
+          .eq("fleet_id", fleetId!),
+      ])
 
+      const data = settingsRes.data
       if (data) {
         setCompanyName(data.company_name ?? "")
         setAddressLine(data.company_address_line ?? "")
@@ -50,7 +59,9 @@ export function CompanyProfileTab() {
         setBankAccountType(data.bank_account_type ?? "")
         setBankAccountNumber(data.bank_account_number ?? "")
         setBankBranchCode(data.bank_branch_code ?? "")
+        setNextInvoiceNumber(String(data.next_invoice_number ?? 1))
       }
+      setHasIssuedInvoices((invoiceCountRes.count ?? 0) > 0)
       setLoading(false)
     }
     load()
@@ -58,6 +69,18 @@ export function CompanyProfileTab() {
 
   async function handleSave() {
     if (!fleetId) return
+
+    // Validate next invoice number only when editable (before any invoices exist)
+    let parsedNextNumber: number | undefined
+    if (!hasIssuedInvoices) {
+      const n = Number(nextInvoiceNumber)
+      if (!Number.isInteger(n) || n < 1) {
+        toast.error("Next invoice number must be a positive whole number (1 or greater).")
+        return
+      }
+      parsedNextNumber = n
+    }
+
     setSaving(true)
     const supabase = createClient()
     const { error } = await supabase
@@ -75,6 +98,7 @@ export function CompanyProfileTab() {
         bank_account_type: bankAccountType || null,
         bank_account_number: bankAccountNumber || null,
         bank_branch_code: bankBranchCode || null,
+        ...(parsedNextNumber != null ? { next_invoice_number: parsedNextNumber } : {}),
       })
       .eq("fleet_id", fleetId!)
 
@@ -177,6 +201,42 @@ export function CompanyProfileTab() {
               <Label>Branch Code</Label>
               <Input value={bankBranchCode} onChange={(e) => setBankBranchCode(e.target.value)} />
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Invoice Numbering</CardTitle>
+          <CardDescription>
+            The number of your next invoice. Set this once when migrating from
+            another platform to keep your numbering continuous. After the first
+            invoice is created this is locked to prevent duplicate numbers.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Next Invoice Number</Label>
+            <Input
+              type="number"
+              inputMode="numeric"
+              min={1}
+              step={1}
+              value={nextInvoiceNumber}
+              onChange={(e) => setNextInvoiceNumber(e.target.value)}
+              disabled={hasIssuedInvoices}
+              placeholder="e.g. 1042"
+            />
+            {hasIssuedInvoices ? (
+              <p className="text-xs text-muted-foreground">
+                Locked — invoices have already been issued on this fleet. Contact
+                support if you need to renumber.
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                The next invoice you create will use this number, then auto-increment.
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
