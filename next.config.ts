@@ -35,13 +35,13 @@ const nextConfig: NextConfig = {
           value: [
             "default-src 'self'",
             // unsafe-eval + wasm-unsafe-eval needed by @react-pdf/renderer; blob: for dynamic chunks
-            "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline' blob:",
-            "style-src 'self' 'unsafe-inline'",
-            `img-src 'self' data: blob: ${supabaseHttpHost}`.trim(),
+            "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline' blob: https://maps.googleapis.com",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+            `img-src 'self' data: blob: ${supabaseHttpHost} https://maps.googleapis.com https://maps.gstatic.com`.trim(),
             // data: + blob: needed for @react-pdf/renderer internal font/WASM fetch
-            `connect-src 'self' data: blob: ${supabaseHttpHost} ${supabaseWsHost}`.trim(),
+            `connect-src 'self' data: blob: ${supabaseHttpHost} ${supabaseWsHost} https://maps.googleapis.com`.trim(),
             // data: needed for @react-pdf/renderer embedded Helvetica font
-            "font-src 'self' data:",
+            "font-src 'self' data: https://fonts.gstatic.com",
             // @react-pdf/renderer spawns an internal worker from a blob URL on some paths
             "worker-src 'self' blob:",
             "frame-ancestors 'none'",
