@@ -107,9 +107,20 @@ export function DriverFormSheet({
       setStatus(driver.status);
       setCategory(driver.category);
       setCommissionPerTrip(driver.commission_per_trip != null ? String(driver.commission_per_trip) : "");
-      setBankAccountNumber(driver.bank_account_number ?? "");
       setUberDriverId(driver.uber_driver_id ?? "");
       setNotes(driver.notes ?? "");
+
+      // Bank account is encrypted at rest — fetch via RPC (owner/admin only)
+      setBankAccountNumber("");
+      void supabase
+        .rpc("get_driver_bank_account", { target_driver_id: driver.id })
+        .then(({ data, error }) => {
+          if (error) {
+            console.error("[driver-form] failed to read bank account:", error);
+            return;
+          }
+          setBankAccountNumber((data as string | null) ?? "");
+        });
     } else {
       setFirstName("");
       setLastName("");
@@ -226,7 +237,7 @@ export function DriverFormSheet({
       status,
       category,
       commission_per_trip: commission,
-      bank_account_number: bankAccountNumber.trim().slice(0, 200) || null,
+      // bank_account_number is encrypted at rest — set via RPC after the row is saved
       uber_driver_id: uberDriverId || null,
       notes: notes || null,
     };
@@ -254,6 +265,19 @@ export function DriverFormSheet({
       toast.error("Something went wrong. Please try again.");
       setSaving(false);
       return;
+    }
+
+    // Encrypt + persist the bank account via the SECURITY DEFINER RPC.
+    // (RPC enforces owner/admin auth; passes through pgcrypto + Vault key.)
+    if (savedDriverId) {
+      const { error: bankErr } = await supabase.rpc("set_driver_bank_account", {
+        target_driver_id: savedDriverId,
+        plaintext: bankAccountNumber.trim().slice(0, 200) || null,
+      });
+      if (bankErr) {
+        console.error("[driver-form] failed to save bank account:", bankErr);
+        toast.error("Driver saved, but bank account could not be encrypted.");
+      }
     }
 
     // Handle vehicle assignment swap if changed
