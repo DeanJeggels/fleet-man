@@ -1,6 +1,21 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+// Public paths that should pass through the middleware without redirecting
+// to /login. Anything not matched here AND with no session is bounced.
+const PUBLIC_PATHS = [
+  "/login",
+  "/auth/", // /auth/set-password and any future auth pages
+  "/robots.txt",
+  "/sitemap.xml",
+];
+
+function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.some((p) =>
+    p.endsWith("/") ? pathname.startsWith(p) : pathname === p || pathname.startsWith(p + "/")
+  );
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -29,19 +44,31 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth/")
-  ) {
+  const { pathname } = request.nextUrl;
+
+  if (!user && !isPublicPath(pathname)) {
+    // /api/* should respond with structured JSON 401, not an HTML redirect —
+    // the client expects to parse the response body.
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    // For everything else, redirect to /login WITHOUT preserving query
+    // params from the original URL. This avoids reflecting attacker-controlled
+    // values into the login page URL bar.
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 
-  if (user && request.nextUrl.pathname.startsWith("/login")) {
+  if (user && pathname.startsWith("/login")) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 
