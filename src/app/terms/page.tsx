@@ -2,12 +2,12 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 // Terms of Service / Service Agreement template.
-// All [TODO] placeholders must be reviewed and filled in by the operator
-// before the platform is offered to third-party fleet operators in
-// production. Consider having a South African attorney review the final
-// language for compliance with the Consumer Protection Act 68 of 2008
-// (CPA), Electronic Communications and Transactions Act 25 of 2002 (ECTA),
-// and any sector-specific obligations.
+// Operator details populated from CH-ISE (Pty) Ltd CIPC registration
+// (2025/332098/07) and Information Regulator K2 certificate (2026-008754).
+// Consider having a South African attorney review the final language for
+// compliance with the Consumer Protection Act 68 of 2008 (CPA), Electronic
+// Communications and Transactions Act 25 of 2002 (ECTA), and any
+// sector-specific obligations.
 
 const LAST_UPDATED = "14 April 2026";
 
@@ -41,7 +41,7 @@ export default function TermsPage() {
             These Terms of Service (&quot;Terms&quot;) govern your access to
             and use of the Fleet Manager platform (the &quot;Service&quot;)
             operated by{" "}
-            <strong>[TODO — Operator Legal Name]</strong> (&quot;we&quot;,
+            <strong>CH-ISE (Pty) Ltd</strong> (&quot;we&quot;,
             &quot;us&quot;). By creating an account, accepting an invitation,
             or using the Service, you agree to be bound by these Terms.
           </p>
@@ -165,7 +165,7 @@ export default function TermsPage() {
           <p>
             All software, designs, logos and content forming part of the
             Service are owned by{" "}
-            <strong>[TODO — Operator Legal Name]</strong> or its licensors.
+            <strong>CH-ISE (Pty) Ltd</strong> or its licensors.
             Nothing in these Terms grants you any right or licence other than
             the limited right to use the Service in accordance with these
             Terms.
@@ -233,20 +233,16 @@ export default function TermsPage() {
             13. Contact
           </h2>
           <p>
-            <strong>[TODO — Operator Legal Name]</strong>
+            <strong>CH-ISE (Pty) Ltd</strong>
             <br />
-            <strong>[TODO — Registered address]</strong>
+            Reg. 2025/332098/07
             <br />
-            Email: <strong>[TODO — operations email]</strong>
-          </p>
-
-          <hr className="my-8" />
-          <p className="text-xs text-muted-foreground">
-            This is a starting template. The &quot;TODO&quot; placeholders
-            must be completed and the document reviewed by a South African
-            attorney before the platform is offered commercially. The
-            disclaimers, limitations of liability, and governing law clauses
-            in particular should be tailored to your specific risk profile.
+            15 Daggeraad Street, Jeffreys Bay, Eastern Cape, 6330
+            <br />
+            Email:{" "}
+            <a href="mailto:dean@ch-ise.co.za" className="text-[#3B82F6] underline">
+              dean@ch-ise.co.za
+            </a>
           </p>
         </div>
       </div>

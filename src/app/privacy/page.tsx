@@ -51,17 +51,25 @@ export default function PrivacyPage() {
             1. Who we are (responsible party)
           </h2>
           <p>
-            <strong>[TODO — Operator / Fleet Owner Legal Name]</strong>
+            <strong>CH-ISE (Pty) Ltd</strong>
             <br />
-            <strong>[TODO — Registered address]</strong>
+            Reg. 2025/332098/07
             <br />
-            Email: <strong>[TODO — operator email]</strong>
+            15 Daggeraad Street, Jeffreys Bay, Eastern Cape, 6330
             <br />
-            Information Officer:{" "}
-            <strong>[TODO — name of Information Officer registered with the Information Regulator]</strong>
+            Email:{" "}
+            <a href="mailto:dean@ch-ise.co.za" className="text-[#3B82F6] underline">
+              dean@ch-ise.co.za
+            </a>
+            <br />
+            Information Officer: <strong>Dean Jeggels</strong>
             <br />
             Information Officer email:{" "}
-            <strong>[TODO — info-officer@yourcompany.co.za]</strong>
+            <a href="mailto:dean@ch-ise.co.za" className="text-[#3B82F6] underline">
+              dean@ch-ise.co.za
+            </a>
+            <br />
+            Information Regulator registration: 2026-008754
           </p>
 
           <h2 className="mt-8 text-lg font-semibold text-slate-900">
@@ -259,16 +267,11 @@ export default function PrivacyPage() {
           </h2>
           <p>
             For any questions about this notice, or to exercise any of the
-            rights above, contact the Information Officer at{" "}
-            <strong>[TODO — info-officer@yourcompany.co.za]</strong>.
-          </p>
-
-          <hr className="my-8" />
-          <p className="text-xs text-muted-foreground">
-            This notice is a starting template. The &quot;TODO&quot; placeholders must
-            be completed by the operator before the platform processes real
-            driver data in production. The Information Officer must be
-            registered with the Information Regulator under POPIA §55.
+            rights above, contact the Information Officer, Dean Jeggels, at{" "}
+            <a href="mailto:dean@ch-ise.co.za" className="text-[#3B82F6] underline">
+              dean@ch-ise.co.za
+            </a>
+            .
           </p>
         </div>
       </div>
