@@ -12,9 +12,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <SidebarProvider>
           <div className="flex min-h-screen w-full">
             <AppSidebar />
-            <div className="flex flex-1 flex-col">
+            {/* min-w-0 is load-bearing: without it, flex children whose
+                contents exceed the flex share (e.g. wide tab lists) will
+                burst the column past the viewport instead of scrolling. */}
+            <div className="flex flex-1 flex-col min-w-0">
               <Topbar />
-              <main className="flex-1 overflow-y-auto bg-slate-50 p-4 pb-20 lg:p-6 lg:pb-6">
+              <main className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 p-4 pb-20 lg:p-6 lg:pb-6">
                 {children}
               </main>
               <BottomTabs />
