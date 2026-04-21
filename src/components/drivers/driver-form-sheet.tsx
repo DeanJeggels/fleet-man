@@ -272,7 +272,10 @@ export function DriverFormSheet({
     if (savedDriverId) {
       const { error: bankErr } = await supabase.rpc("set_driver_bank_account", {
         target_driver_id: savedDriverId,
-        plaintext: bankAccountNumber.trim().slice(0, 200) || null,
+        // Null is valid — the SQL function uses it to clear the bank account.
+        // Supabase's type generator recently stopped marking text params
+        // nullable, so we cast through unknown.
+        plaintext: (bankAccountNumber.trim().slice(0, 200) || null) as unknown as string,
       });
       if (bankErr) {
         console.error("[driver-form] failed to save bank account:", bankErr);
