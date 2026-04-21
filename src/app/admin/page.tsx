@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProvisionFleetForm } from "./_components/provision-fleet-form";
+import { InviteExistingFleetOwnerForm } from "./_components/invite-existing-fleet-owner-form";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +58,10 @@ export default async function AdminPage() {
       </div>
 
       <ProvisionFleetForm />
+
+      <InviteExistingFleetOwnerForm
+        fleets={fleets.map((f) => ({ id: f.id, name: f.name }))}
+      />
 
       <Card>
         <CardHeader>
