@@ -88,8 +88,14 @@ export async function updateSession(
   }
 
   if (user && pathname.startsWith("/login")) {
+    // Super-admin has no fleet-scoped dashboard; send them to /admin instead.
+    // This is an extra DB roundtrip but only fires on the post-login redirect.
+    const { data: isSuper } = await supabase.rpc("is_super_admin", {
+      p_user_id: user.id,
+    });
+
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = isSuper === true ? "/admin" : "/dashboard";
     url.search = "";
     return NextResponse.redirect(url);
   }

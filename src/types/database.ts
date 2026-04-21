@@ -410,13 +410,9 @@ export type Database = {
           },
         ]
       }
-      // (profiles_fleet table types are below; popi_consented_at + popi_consent_version
-      //  added by migration 30 — the `Database` aliases at the bottom are kept manually.)
       drivers: {
         Row: {
           anonymised_at: string | null
-          // bank_account_number is encrypted at rest in `bank_account_enc`.
-          // Read via get_driver_bank_account RPC, write via set_driver_bank_account RPC.
           bank_account_enc: string | null
           category: Database["public"]["Enums"]["fleet_category"]
           commission_per_trip: number | null
@@ -521,6 +517,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fleet_invites_assigned_vehicle_id_fkey"
+            columns: ["assigned_vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fleet_invites_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "fleet_invites_fleet_id_fkey"
             columns: ["fleet_id"]
             isOneToOne: false
@@ -538,6 +548,9 @@ export type Database = {
           bank_account_type: string | null
           bank_branch_code: string | null
           bank_name: string | null
+          bolt_client_id: string | null
+          bolt_client_secret: string | null
+          bolt_company_id: string | null
           company_address_line: string | null
           company_city: string | null
           company_email: string | null
@@ -556,13 +569,10 @@ export type Database = {
           uber_client_id: string | null
           uber_client_secret: string | null
           uber_org_uuid: string | null
-          bolt_company_id: string | null
-          bolt_client_id: string | null
-          bolt_client_secret: string | null
+          updated_at: string
           vat_rate: number
           vat_registered: boolean
           vat_registration_number: string | null
-          updated_at: string
         }
         Insert: {
           alert_days_threshold?: number
@@ -572,6 +582,9 @@ export type Database = {
           bank_account_type?: string | null
           bank_branch_code?: string | null
           bank_name?: string | null
+          bolt_client_id?: string | null
+          bolt_client_secret?: string | null
+          bolt_company_id?: string | null
           company_address_line?: string | null
           company_city?: string | null
           company_email?: string | null
@@ -590,13 +603,10 @@ export type Database = {
           uber_client_id?: string | null
           uber_client_secret?: string | null
           uber_org_uuid?: string | null
-          bolt_company_id?: string | null
-          bolt_client_id?: string | null
-          bolt_client_secret?: string | null
+          updated_at?: string
           vat_rate?: number
           vat_registered?: boolean
           vat_registration_number?: string | null
-          updated_at?: string
         }
         Update: {
           alert_days_threshold?: number
@@ -606,6 +616,9 @@ export type Database = {
           bank_account_type?: string | null
           bank_branch_code?: string | null
           bank_name?: string | null
+          bolt_client_id?: string | null
+          bolt_client_secret?: string | null
+          bolt_company_id?: string | null
           company_address_line?: string | null
           company_city?: string | null
           company_email?: string | null
@@ -624,13 +637,10 @@ export type Database = {
           uber_client_id?: string | null
           uber_client_secret?: string | null
           uber_org_uuid?: string | null
-          bolt_company_id?: string | null
-          bolt_client_id?: string | null
-          bolt_client_secret?: string | null
+          updated_at?: string
           vat_rate?: number
           vat_registered?: boolean
           vat_registration_number?: string | null
-          updated_at?: string
         }
         Relationships: [
           {
@@ -713,6 +723,13 @@ export type Database = {
           week_starting?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fuel_logs_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fuel_logs_fleet_id_fkey"
             columns: ["fleet_id"]
@@ -1067,6 +1084,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "profiles_fleet_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profiles_fleet_fleet_id_fkey"
             columns: ["fleet_id"]
             isOneToOne: false
@@ -1074,6 +1098,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rate_limits: {
+        Row: {
+          bucket: string
+          count: number
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          count?: number
+          user_id: string
+          window_start: string
+        }
+        Update: {
+          bucket?: string
+          count?: number
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
       }
       service_schedules: {
         Row: {
@@ -1137,6 +1182,21 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      super_admins: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       suppliers: {
         Row: {
@@ -1413,20 +1473,33 @@ export type Database = {
         Args: { target_driver_id: string }
         Returns: undefined
       }
-      export_my_personal_data: {
-        Args: never
-        Returns: Record<string, unknown>
+      check_rate_limit: {
+        Args: {
+          p_bucket: string
+          p_max: number
+          p_user_id: string
+          p_window: string
+        }
+        Returns: boolean
       }
+      current_user_driver_id: { Args: never; Returns: string }
+      export_my_personal_data: { Args: never; Returns: Json }
       get_driver_bank_account: {
         Args: { target_driver_id: string }
-        Returns: string | null
+        Returns: string
       }
+      is_current_user_fleet_owner: {
+        Args: { target_fleet_id: string }
+        Returns: boolean
+      }
+      is_fleet_driver: { Args: { target_fleet_id: string }; Returns: boolean }
       is_fleet_owner_or_admin: {
         Args: { target_fleet_id: string }
         Returns: boolean
       }
+      is_super_admin: { Args: { p_user_id: string }; Returns: boolean }
       set_driver_bank_account: {
-        Args: { target_driver_id: string; plaintext: string | null }
+        Args: { plaintext: string; target_driver_id: string }
         Returns: undefined
       }
       user_fleet_ids: { Args: never; Returns: string[] }

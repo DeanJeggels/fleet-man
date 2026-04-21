@@ -1,11 +1,19 @@
+import { redirect } from "next/navigation";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { BottomTabs } from "@/components/layout/bottom-tabs";
 import { FleetProvider } from "@/contexts/fleet-context";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { getSuperAdminContext } from "@/lib/auth/super-admin";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+// The super-admin has no fleet-scoped profile, so the FleetProvider below
+// would spin on "no profiles_fleet row". Route them to /admin instead.
+export const dynamic = "force-dynamic";
+
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { isSuperAdmin } = await getSuperAdminContext();
+  if (isSuperAdmin) redirect("/admin");
   return (
     <QueryProvider>
       <FleetProvider>
