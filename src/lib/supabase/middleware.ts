@@ -10,6 +10,8 @@ const PUBLIC_PATHS = [
   "/terms", // Terms of Service — must be publicly readable
   "/robots.txt",
   "/sitemap.xml",
+  "/.well-known/", // security.txt and any future well-known files
+  "/api/csp-report", // browser posts CSP violations here without auth
 ];
 
 function isPublicPath(pathname: string): boolean {
@@ -18,8 +20,24 @@ function isPublicPath(pathname: string): boolean {
   );
 }
 
-export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
+export async function updateSession(
+  request: NextRequest,
+  extraRequestHeaders?: Headers,
+) {
+  // Merge any caller-provided headers (e.g. x-nonce, CSP) onto a fresh clone
+  // of the current request headers. Must be rebuilt after each cookie
+  // mutation so Supabase's refreshed Cookie header propagates downstream.
+  const buildHeaders = () => {
+    const h = new Headers(request.headers);
+    if (extraRequestHeaders) {
+      for (const [k, v] of extraRequestHeaders.entries()) h.set(k, v);
+    }
+    return h;
+  };
+
+  let supabaseResponse = NextResponse.next({
+    request: { headers: buildHeaders() },
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,7 +51,9 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
-          supabaseResponse = NextResponse.next({ request });
+          supabaseResponse = NextResponse.next({
+            request: { headers: buildHeaders() },
+          });
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           );
