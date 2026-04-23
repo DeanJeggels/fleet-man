@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { format } from "date-fns"
 import { createClient } from "@/lib/supabase/client"
 import { useFleet } from "@/contexts/fleet-context"
+import { useFormDraft } from "@/hooks/use-form-draft"
 import { toast } from "sonner"
 import {
   Sheet,
@@ -132,6 +133,34 @@ export function ContractTripFormSheet({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientId])
 
+  // Draft persistence — add mode only. Declared after the reset effect so
+  // restored values aren't clobbered by the [open, trip?.id] load effect.
+  const draftKey = !trip && fleetId ? `fleet:${fleetId}:draft:contract-trip-new` : null
+  const { clearDraft } = useFormDraft({
+    key: draftKey,
+    enabled: open,
+    changeSignal:
+      clientId + "|" + vehicleId + "|" + driverId + "|" + tripDate + "|" + tripTime + "|" +
+      companyLabel + "|" + coordinator + "|" + areas.join(",") + "|" + pax + "|" + amount + "|" + notes,
+    getValues: () => ({
+      clientId, vehicleId, driverId, tripDate, tripTime,
+      companyLabel, coordinator, areas, pax, amount, notes,
+    }),
+    applyValues: (v) => {
+      setClientId(v.clientId ?? "")
+      setVehicleId(v.vehicleId ?? "")
+      setDriverId(v.driverId ?? "")
+      setTripDate(v.tripDate ?? format(new Date(), "yyyy-MM-dd"))
+      setTripTime(v.tripTime ?? "")
+      setCompanyLabel(v.companyLabel ?? "")
+      setCoordinator(v.coordinator ?? "")
+      setAreas(Array.isArray(v.areas) ? v.areas : [])
+      setPax(v.pax ?? "")
+      setAmount(v.amount ?? "")
+      setNotes(v.notes ?? "")
+    },
+  })
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
@@ -210,6 +239,7 @@ export function ContractTripFormSheet({
     }
 
     toast.success(trip ? "Trip updated" : "Trip added")
+    clearDraft()
     onOpenChange(false)
     onSaved()
   }

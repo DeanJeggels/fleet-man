@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useFleet } from "@/contexts/fleet-context"
+import { useFormDraft } from "@/hooks/use-form-draft"
 import { toast } from "sonner"
 import {
   Sheet,
@@ -65,6 +66,34 @@ export function ContractClientFormSheet({
     onOpenChange(value)
   }
 
+  // Draft persistence — add mode only.
+  const draftKey = !client && fleetId ? `fleet:${fleetId}:draft:contract-client-new` : null
+  const { clearDraft } = useFormDraft({
+    key: draftKey,
+    enabled: open,
+    changeSignal:
+      name + "|" + contactPerson + "|" + phone + "|" + email + "|" + addressLine + "|" +
+      city + "|" + province + "|" + postalCode + "|" + defaultRate + "|" + notes + "|" +
+      (consented ? "1" : "0"),
+    getValues: () => ({
+      name, contactPerson, phone, email, addressLine, city, province, postalCode,
+      defaultRate, notes, consented,
+    }),
+    applyValues: (v) => {
+      setName(v.name ?? "")
+      setContactPerson(v.contactPerson ?? "")
+      setPhone(v.phone ?? "")
+      setEmail(v.email ?? "")
+      setAddressLine(v.addressLine ?? "")
+      setCity(v.city ?? "")
+      setProvince(v.province ?? "")
+      setPostalCode(v.postalCode ?? "")
+      setDefaultRate(v.defaultRate ?? "")
+      setNotes(v.notes ?? "")
+      setConsented(Boolean(v.consented))
+    },
+  })
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim()) {
@@ -112,6 +141,7 @@ export function ContractClientFormSheet({
     }
 
     toast.success(client ? "Client updated" : "Client added")
+    clearDraft()
     onOpenChange(false)
     onSaved()
   }

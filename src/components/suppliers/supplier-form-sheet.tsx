@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useFleet } from "@/contexts/fleet-context";
+import { useFormDraft } from "@/hooks/use-form-draft";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -56,6 +57,23 @@ export function SupplierFormSheet({
     onOpenChange(value);
   };
 
+  // Draft persistence — add mode only.
+  const draftKey = !supplier && fleetId ? `fleet:${fleetId}:draft:supplier-new` : null;
+  const { clearDraft } = useFormDraft({
+    key: draftKey,
+    enabled: open,
+    changeSignal: name + "|" + phone + "|" + email + "|" + location + "|" + notes + "|" + (consented ? "1" : "0"),
+    getValues: () => ({ name, phone, email, location, notes, consented }),
+    applyValues: (v) => {
+      setName(v.name ?? "");
+      setPhone(v.phone ?? "");
+      setEmail(v.email ?? "");
+      setLocation(v.location ?? "");
+      setNotes(v.notes ?? "");
+      setConsented(Boolean(v.consented));
+    },
+  });
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
@@ -87,6 +105,7 @@ export function SupplierFormSheet({
     }
 
     toast.success(supplier ? "Supplier updated" : "Supplier added");
+    clearDraft();
     onOpenChange(false);
     onSaved();
   }

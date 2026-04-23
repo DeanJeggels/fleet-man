@@ -6,6 +6,7 @@ import { format, parseISO, startOfMonth, endOfMonth } from "date-fns"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import { useFleet } from "@/contexts/fleet-context"
+import { useFormDraft } from "@/hooks/use-form-draft"
 import { PageHeader } from "@/components/shared/page-header"
 import { OwnerOnlyGuard } from "@/components/shared/owner-only-guard"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -77,6 +78,22 @@ function NewInvoiceContent() {
     loadRefs()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fleetId])
+
+  // Draft persistence — survive accidental nav/refocus. Matched trips and
+  // loading flags are derived, not persisted.
+  const draftKey = fleetId ? `fleet:${fleetId}:draft:invoice-new` : null
+  const { clearDraft } = useFormDraft({
+    key: draftKey,
+    enabled: true,
+    changeSignal: clientId + "|" + driverId + "|" + periodStart + "|" + periodEnd,
+    getValues: () => ({ clientId, driverId, periodStart, periodEnd }),
+    applyValues: (v) => {
+      setClientId(v.clientId ?? "")
+      setDriverId(v.driverId ?? "")
+      if (v.periodStart) setPeriodStart(v.periodStart)
+      if (v.periodEnd) setPeriodEnd(v.periodEnd)
+    },
+  })
 
   const findTrips = useCallback(async () => {
     if (!fleetId || !clientId || !periodStart || !periodEnd) return
@@ -207,6 +224,7 @@ function NewInvoiceContent() {
 
     setCreating(false)
     toast.success(`Invoice ${invoiceNumber} created with ${matchedTrips.length} trips.`)
+    clearDraft()
     router.push(`/contract/invoices/${invoice.id}`)
   }
 

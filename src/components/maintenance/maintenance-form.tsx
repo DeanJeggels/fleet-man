@@ -4,6 +4,7 @@ import * as React from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { useFleet } from "@/contexts/fleet-context"
+import { useFormDraft } from "@/hooks/use-form-draft"
 import { toast } from "sonner"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -139,6 +140,35 @@ export function MaintenanceForm() {
 
     load()
   }, [fleetId])
+
+  // Draft persistence — maintenance form is always "new event" mode. Stores
+  // all scalar form state + uploaded-invoice URL + line items. Cleared on
+  // successful save.
+  const draftKey = fleetId ? `fleet:${fleetId}:draft:maintenance-new` : null
+  const { clearDraft } = useFormDraft({
+    key: draftKey,
+    enabled: true,
+    changeSignal:
+      vehicleId + "|" + supplierId + "|" + category + "|" + eventDate.toISOString() + "|" +
+      odometer + "|" + description + "|" + notes + "|" + (invoiceUrl ?? "") + "|" +
+      JSON.stringify(lineItems),
+    getValues: () => ({
+      vehicleId, supplierId, category,
+      eventDateIso: eventDate.toISOString(),
+      odometer, description, notes, invoiceUrl, lineItems,
+    }),
+    applyValues: (v) => {
+      setVehicleId(v.vehicleId ?? "")
+      setSupplierId(v.supplierId ?? "")
+      setCategory((v.category as MaintenanceCategory) ?? "routine")
+      setEventDate(v.eventDateIso ? new Date(v.eventDateIso) : new Date())
+      setOdometer(v.odometer ?? "")
+      setDescription(v.description ?? "")
+      setNotes(v.notes ?? "")
+      setInvoiceUrl(v.invoiceUrl ?? null)
+      setLineItems(Array.isArray(v.lineItems) ? v.lineItems : [])
+    },
+  })
 
   // Match vehicle by registration number (fuzzy — strips spaces/dashes)
   function matchVehicle(registration: string): Vehicle | undefined {
@@ -481,6 +511,7 @@ export function MaintenanceForm() {
       }
 
       toast.success("Maintenance event logged successfully.")
+      clearDraft()
       router.push(`/vehicles/${vehicleId}`)
     } catch (err) {
       console.error(err)

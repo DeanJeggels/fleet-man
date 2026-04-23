@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useFleet } from "@/contexts/fleet-context";
+import { useFormDraft } from "@/hooks/use-form-draft";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Archive, CalendarIcon, Trash2 } from "lucide-react";
@@ -205,6 +206,44 @@ export function DriverFormSheet({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, driver, fleetId]);
 
+  // Draft persistence (add mode only). Declared AFTER the reset effects so
+  // the restore applies AFTER the [driver, open] effect clears state,
+  // otherwise the reset would clobber the restored values.
+  const draftKey = !driver && fleetId ? `fleet:${fleetId}:draft:driver-new` : null;
+  const { clearDraft } = useFormDraft({
+    key: draftKey,
+    enabled: open,
+    changeSignal:
+      firstName + "|" + lastName + "|" + licenseNumber + "|" +
+      (licenseExpiry?.toISOString() ?? "") + "|" + email + "|" + phone + "|" +
+      status + "|" + category + "|" + commissionPerTrip + "|" +
+      bankAccountNumber + "|" + uberDriverId + "|" + notes + "|" +
+      assignedVehicleId + "|" + (consented ? "1" : "0"),
+    getValues: () => ({
+      firstName, lastName, licenseNumber,
+      licenseExpiryIso: licenseExpiry ? licenseExpiry.toISOString() : null,
+      email, phone, status, category,
+      commissionPerTrip, bankAccountNumber, uberDriverId, notes,
+      assignedVehicleId, consented,
+    }),
+    applyValues: (v) => {
+      setFirstName(v.firstName ?? "");
+      setLastName(v.lastName ?? "");
+      setLicenseNumber(v.licenseNumber ?? "");
+      setLicenseExpiry(v.licenseExpiryIso ? new Date(v.licenseExpiryIso) : undefined);
+      setEmail(v.email ?? "");
+      setPhone(v.phone ?? "");
+      setStatus((v.status as DriverStatus) ?? "active");
+      setCategory((v.category as FleetCategory) ?? "e_hailing");
+      setCommissionPerTrip(v.commissionPerTrip ?? "");
+      setBankAccountNumber(v.bankAccountNumber ?? "");
+      setUberDriverId(v.uberDriverId ?? "");
+      setNotes(v.notes ?? "");
+      setAssignedVehicleId(v.assignedVehicleId ?? "");
+      setConsented(Boolean(v.consented));
+    },
+  });
+
   async function handleSave() {
     if (!firstName || !lastName || !licenseNumber || !licenseExpiry) {
       toast.error("Please fill in all required fields");
@@ -336,6 +375,7 @@ export function DriverFormSheet({
 
     setSaving(false);
     toast.success(isEdit ? "Driver updated" : "Driver added");
+    clearDraft();
     invalidateDriverVehicleQueries();
     onOpenChange(false);
     onSaved();
