@@ -16,8 +16,10 @@ export function QueryProvider({ children }: { children: ReactNode }) {
             gcTime: 5 * 60 * 1000,
             // Only retry transient errors once
             retry: 1,
-            // Don't refetch on window focus by default — too noisy for form-heavy app
+            // Don't refetch on focus/reconnect — too noisy for a form-heavy app,
+            // and remount-style refetches can wipe in-progress form state.
             refetchOnWindowFocus: false,
+            refetchOnReconnect: false,
           },
         },
       })

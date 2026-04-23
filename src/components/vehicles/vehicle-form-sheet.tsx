@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useFormDraft } from "@/hooks/use-form-draft";
 import type { Vehicle, VehicleStatus, FleetCategory } from "@/types/database";
 import { toast } from "sonner";
 import {
@@ -98,6 +99,35 @@ export function VehicleFormSheet({
     }
   }, [vehicle, open]);
 
+  // Draft persistence — add mode only.
+  const draftKey = !vehicle && fleetId ? `fleet:${fleetId}:draft:vehicle-new` : null;
+  const { clearDraft } = useFormDraft({
+    key: draftKey,
+    enabled: open,
+    changeSignal:
+      registration + "|" + make + "|" + model + "|" + year + "|" + vin + "|" +
+      vehicleType + "|" + color + "|" + category + "|" + status + "|" +
+      (dateAdded?.toISOString() ?? "") + "|" + notes,
+    getValues: () => ({
+      registration, make, model, year, vin, vehicleType, color, category, status,
+      dateAddedIso: dateAdded ? dateAdded.toISOString() : null,
+      notes,
+    }),
+    applyValues: (v) => {
+      setRegistration(v.registration ?? "");
+      setMake(v.make ?? "");
+      setModel(v.model ?? "");
+      setYear(v.year ?? "");
+      setVin(v.vin ?? "");
+      setVehicleType(v.vehicleType ?? "");
+      setColor(v.color ?? "");
+      setCategory((v.category as FleetCategory) ?? "e_hailing");
+      setStatus((v.status as VehicleStatus) ?? "active");
+      setDateAdded(v.dateAddedIso ? new Date(v.dateAddedIso) : undefined);
+      setNotes(v.notes ?? "");
+    },
+  });
+
   async function handleSave() {
     if (!registration.trim() || !make.trim() || !model.trim()) {
       toast.error("Registration, Make and Model are required.");
@@ -153,6 +183,7 @@ export function VehicleFormSheet({
     }
 
     setSaving(false);
+    clearDraft();
     onOpenChange(false);
     onSaved();
   }

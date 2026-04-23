@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { createClient } from "@/lib/supabase/client";
 import { useFleet } from "@/contexts/fleet-context";
+import { useFormDraft } from "@/hooks/use-form-draft";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +64,24 @@ export function BatchFuelForm({ vehicles, onSaved }: BatchFuelFormProps) {
   );
   const [saving, setSaving] = useState(false);
   const isMobile = useIsMobile();
+
+  // Persist unsaved rows to sessionStorage so a tab refocus can't wipe them.
+  const draftKey = fleetId ? `fleet:${fleetId}:draft:fuel-batch` : null;
+  const { clearDraft } = useFormDraft<RowData[]>({
+    key: draftKey,
+    enabled: true,
+    changeSignal: rows.map((r) => `${r.vehicle_id}:${r.litres}:${r.cost_per_litre}:${r.odometer}:${r.date}`).join("|"),
+    getValues: () => rows,
+    applyValues: (saved) => {
+      // Merge by vehicle_id so newly-added vehicles aren't lost.
+      setRows((current) =>
+        current.map((row) => {
+          const match = saved.find((s) => s.vehicle_id === row.vehicle_id);
+          return match ? { ...row, ...match } : row;
+        })
+      );
+    },
+  });
 
   const updateRow = useCallback(
     (index: number, field: keyof RowData, value: string) => {
@@ -139,6 +158,7 @@ export function BatchFuelForm({ vehicles, onSaved }: BatchFuelFormProps) {
     }
 
     toast.success(`Saved ${inserts.length} fuel ${inserts.length === 1 ? "entry" : "entries"}.`);
+    clearDraft();
 
     // Clear form
     setRows(

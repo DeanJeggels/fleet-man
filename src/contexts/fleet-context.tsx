@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 import { createClient } from "@/lib/supabase/client"
 import type { FleetRole } from "@/types/database"
 
@@ -35,7 +35,12 @@ export function FleetProvider({ children }: { children: ReactNode }) {
     const supabase = createClient()
     let cancelled = false
 
-    async function loadProfile() {
+    // showSpinner=true only for first load. Background refreshes after
+    // auth events must keep the existing UI mounted — otherwise setting
+    // loading=true unmounts every child (including open form sheets)
+    // and wipes in-progress form state on every tab refocus.
+    async function loadProfile(showSpinner: boolean) {
+      if (showSpinner) setLoading(true)
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError) console.error("[FleetContext] auth.getUser error:", authError)
 
@@ -79,13 +84,14 @@ export function FleetProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     }
 
-    loadProfile()
+    loadProfile(true)
 
-    // Re-fetch on auth change (sign in/out, token refresh)
+    // Only respond to identity-changing events. TOKEN_REFRESHED fires on every
+    // tab refocus and does NOT change the user or their profile — refetching
+    // would just cause a pointless re-render cascade.
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "SIGNED_OUT") {
-        setLoading(true)
-        loadProfile()
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+        loadProfile(false)
       }
     })
 
@@ -95,6 +101,16 @@ export function FleetProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const value = useMemo<FleetContextValue>(() => ({
+    fleetId,
+    role,
+    displayName,
+    driverId,
+    loading,
+    isOwnerOrAdmin: role === "owner" || role === "admin",
+    isDriver: role === "driver",
+  }), [fleetId, role, displayName, driverId, loading])
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
@@ -103,11 +119,8 @@ export function FleetProvider({ children }: { children: ReactNode }) {
     )
   }
 
-  const isOwnerOrAdmin = role === "owner" || role === "admin"
-  const isDriver = role === "driver"
-
   return (
-    <FleetContext.Provider value={{ fleetId, role, displayName, driverId, loading, isOwnerOrAdmin, isDriver }}>
+    <FleetContext.Provider value={value}>
       {children}
     </FleetContext.Provider>
   )
