@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Car, DollarSign, Wrench, Route, Fuel, Briefcase } from "lucide-react";
 import { startOfMonth, format } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useFleet } from "@/contexts/fleet-context";
 import { KPICard } from "@/components/shared/kpi-card";
@@ -22,72 +22,49 @@ const zarFormat = new Intl.NumberFormat("en-ZA", {
 
 export default function DashboardPage() {
   const { fleetId, isOwnerOrAdmin, isDriver, displayName } = useFleet();
-  const [loading, setLoading] = useState(true);
-  const [activeVehicles, setActiveVehicles] = useState(0);
-  const [totalVehicles, setTotalVehicles] = useState(0);
-  const [maintenanceSpend, setMaintenanceSpend] = useState(0);
-  const [uberRevenue, setUberRevenue] = useState(0);
-  const [fleetKm, setFleetKm] = useState(0);
 
-  useEffect(() => {
-    if (!fleetId || isDriver) return;
-    async function fetchKPIs() {
+  // Single batched KPI query — same key shape as useRoutePrefetch (excluding
+  // `isDriver` gate here because prefetch runs for the owner navigation).
+  const { data, isPending } = useQuery({
+    queryKey: ["dashboard-kpis", fleetId],
+    enabled: !!fleetId && !isDriver,
+    queryFn: async () => {
       const supabase = createClient();
       const monthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
-
-      const [
-        { data: vehicleStatuses },
-        { data: maintenanceCosts },
-        { data: tripEarnings },
-        { data: tripDistances },
-      ] = await Promise.all([
-        supabase.from("vehicles").select("status").eq("fleet_id", fleetId!),
+      const [vehiclesRes, maintRes, uberRes] = await Promise.all([
+        supabase
+          .from("vehicles")
+          .select("id, status, category")
+          .eq("fleet_id", fleetId!),
         supabase
           .from("maintenance_events")
-          .select("cost_total")
+          .select("cost_total, event_date")
           .eq("fleet_id", fleetId!)
           .gte("event_date", monthStart),
         supabase
           .from("uber_trip_data")
-          .select("total_earnings")
-          .eq("fleet_id", fleetId!)
-          .gte("period_date", monthStart),
-        supabase
-          .from("uber_trip_data")
-          .select("distance_km")
+          .select("total_earnings, distance_km, period_date")
           .eq("fleet_id", fleetId!)
           .gte("period_date", monthStart),
       ]);
+      return {
+        vehicles: vehiclesRes.data ?? [],
+        maintenance: maintRes.data ?? [],
+        uber: uberRes.data ?? [],
+      };
+    },
+  });
 
-      if (vehicleStatuses) {
-        setTotalVehicles(vehicleStatuses.length);
-        setActiveVehicles(
-          vehicleStatuses.filter((v) => v.status === "active").length
-        );
-      }
-
-      if (maintenanceCosts) {
-        setMaintenanceSpend(
-          maintenanceCosts.reduce((sum, m) => sum + m.cost_total, 0)
-        );
-      }
-
-      if (tripEarnings) {
-        setUberRevenue(
-          tripEarnings.reduce((sum, t) => sum + t.total_earnings, 0)
-        );
-      }
-
-      if (tripDistances) {
-        setFleetKm(
-          tripDistances.reduce((sum, t) => sum + t.distance_km, 0)
-        );
-      }
-
-      setLoading(false);
-    }
-    fetchKPIs();
-  }, [fleetId, isDriver]);
+  const loading = isPending;
+  const totalVehicles = data?.vehicles.length ?? 0;
+  const activeVehicles =
+    data?.vehicles.filter((v) => v.status === "active").length ?? 0;
+  const maintenanceSpend =
+    data?.maintenance.reduce((sum, m) => sum + Number(m.cost_total ?? 0), 0) ?? 0;
+  const uberRevenue =
+    data?.uber.reduce((sum, t) => sum + Number(t.total_earnings ?? 0), 0) ?? 0;
+  const fleetKm =
+    data?.uber.reduce((sum, t) => sum + Number(t.distance_km ?? 0), 0) ?? 0;
 
   if (isDriver) {
     return (

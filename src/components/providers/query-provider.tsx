@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, keepPreviousData } from "@tanstack/react-query";
 
 export function QueryProvider({ children }: { children: ReactNode }) {
   // Create the client once per component lifetime (not per render)
@@ -10,9 +10,11 @@ export function QueryProvider({ children }: { children: ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Keep data fresh for 60s — dashboards re-use within that window
+            // Keep data fresh for 60s — within that window, repeat navigations
+            // return cached data synchronously with no refetch at all.
             staleTime: 60 * 1000,
-            // Cache for 5 minutes after the last observer unmounts
+            // Cache for 5 minutes after the last observer unmounts — gives
+            // navigation a warm cache even when returning after a detour.
             gcTime: 5 * 60 * 1000,
             // Only retry transient errors once
             retry: 1,
@@ -20,6 +22,11 @@ export function QueryProvider({ children }: { children: ReactNode }) {
             // and remount-style refetches can wipe in-progress form state.
             refetchOnWindowFocus: false,
             refetchOnReconnect: false,
+            // When a query key changes (e.g. filter or page swaps), keep the
+            // previous data visible while the new query resolves instead of
+            // flashing a skeleton. Massively reduces perceived latency on
+            // navigations and filter changes.
+            placeholderData: keepPreviousData,
           },
         },
       })

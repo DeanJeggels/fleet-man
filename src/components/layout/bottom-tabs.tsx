@@ -21,6 +21,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useFleet } from "@/contexts/fleet-context";
+import { useRoutePrefetch } from "@/hooks/use-route-prefetch";
 
 type Tab = { label: string; icon: typeof LayoutDashboard; href: string; ownerOnly?: boolean };
 
@@ -48,6 +49,7 @@ const driverMainTabs: Tab[] = [
 export function BottomTabs() {
   const pathname = usePathname();
   const { isOwnerOrAdmin, isDriver } = useFleet();
+  const prefetchRoute = useRoutePrefetch();
   const [open, setOpen] = useState(false);
 
   const mainTabs = isDriver
@@ -69,6 +71,8 @@ export function BottomTabs() {
           <Link
             key={tab.href}
             href={tab.href}
+            onPointerEnter={() => prefetchRoute(tab.href)}
+            onTouchStart={() => prefetchRoute(tab.href)}
             className={`flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-0.5 text-xs transition-colors duration-150 ${
               isActive ? "text-[#3B82F6]" : "text-muted-foreground"
             }`}
@@ -98,6 +102,8 @@ export function BottomTabs() {
                   key={tab.href}
                   href={tab.href}
                   onClick={() => setOpen(false)}
+                  onPointerEnter={() => prefetchRoute(tab.href)}
+                  onTouchStart={() => prefetchRoute(tab.href)}
                   className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors duration-150 ${
                     isActive
                       ? "bg-accent/10 text-[#3B82F6]"

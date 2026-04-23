@@ -26,6 +26,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useFleet } from "@/contexts/fleet-context";
+import { useRoutePrefetch } from "@/hooks/use-route-prefetch";
 
 // ownerOnly items are hidden from members
 const navItems = [
@@ -49,6 +50,7 @@ const driverNavItems = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { isOwnerOrAdmin, isDriver } = useFleet();
+  const prefetchRoute = useRoutePrefetch();
 
   const visibleItems = isDriver
     ? driverNavItems
@@ -76,7 +78,11 @@ export function AppSidebar() {
                   (item.href !== "/dashboard" &&
                     pathname.startsWith(item.href));
                 return (
-                  <SidebarMenuItem key={item.href}>
+                  <SidebarMenuItem
+                    key={item.href}
+                    onPointerEnter={() => prefetchRoute(item.href)}
+                    onFocus={() => prefetchRoute(item.href)}
+                  >
                     <SidebarMenuButton
                       render={<Link href={item.href} />}
                       isActive={isActive}
