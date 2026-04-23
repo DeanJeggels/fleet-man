@@ -1,9 +1,10 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Plus } from "lucide-react"
 import { format, parseISO } from "date-fns"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { createClient } from "@/lib/supabase/client"
 import { useFleet } from "@/contexts/fleet-context"
 import { PageHeader } from "@/components/shared/page-header"
@@ -39,41 +40,47 @@ function ContractTripsContent() {
   const { fleetId } = useFleet()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const queryClient = useQueryClient()
   const pageParam = Number(searchParams.get("page") ?? "1")
   const page = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1
 
-  const [trips, setTrips] = useState<TripRow[]>([])
-  const [totalCount, setTotalCount] = useState(0)
-  const [loading, setLoading] = useState(true)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [editing, setEditing] = useState<ContractTrip | null>(null)
 
-  const fetchTrips = useCallback(async () => {
-    if (!fleetId) return
-    setLoading(true)
-    const supabase = createClient()
-    const from = (page - 1) * PAGE_SIZE
-    const to = from + PAGE_SIZE - 1
-    const { data, count } = await supabase
-      .from("contract_trips")
-      .select(
-        "*, client:contract_clients(name), driver:drivers(first_name, last_name), vehicle:vehicles(registration)",
-        { count: "exact" }
-      )
-      .eq("fleet_id", fleetId!)
-      .order("trip_date", { ascending: false })
-      .order("trip_time", { ascending: true })
-      .range(from, to)
-    setTrips((data ?? []) as unknown as TripRow[])
-    setTotalCount(count ?? 0)
-    setLoading(false)
-  }, [fleetId, page])
+  const { data, isPending, isPlaceholderData } = useQuery({
+    queryKey: ["contract-trips", fleetId, page],
+    enabled: !!fleetId,
+    queryFn: async () => {
+      const supabase = createClient()
+      const from = (page - 1) * PAGE_SIZE
+      const to = from + PAGE_SIZE - 1
+      const res = await supabase
+        .from("contract_trips")
+        .select(
+          "*, client:contract_clients(name), driver:drivers(first_name, last_name), vehicle:vehicles(registration)",
+          { count: "exact" }
+        )
+        .eq("fleet_id", fleetId!)
+        .order("trip_date", { ascending: false })
+        .order("trip_time", { ascending: true })
+        .range(from, to)
+      return {
+        rows: ((res.data ?? []) as unknown as TripRow[]),
+        count: res.count ?? 0,
+      }
+    },
+  })
 
-  useEffect(() => {
-    fetchTrips()
-  }, [fetchTrips])
-
+  const trips = data?.rows ?? []
+  const totalCount = data?.count ?? 0
+  // With placeholderData=keepPreviousData, skeleton only shows on first fetch;
+  // subsequent page/filter changes show the stale page while the new one loads.
+  const loading = isPending && !isPlaceholderData
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+
+  function refetchTrips() {
+    queryClient.invalidateQueries({ queryKey: ["contract-trips", fleetId] })
+  }
 
   function handlePageChange(nextPage: number) {
     const params = new URLSearchParams(searchParams.toString())
@@ -209,7 +216,7 @@ function ContractTripsContent() {
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         trip={editing}
-        onSaved={fetchTrips}
+        onSaved={refetchTrips}
       />
     </div>
   )

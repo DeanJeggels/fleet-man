@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useFleet } from "@/contexts/fleet-context";
 import type { Database } from "@/types/database";
@@ -31,10 +32,27 @@ export default function SuppliersPage() {
 function SuppliersPageContent() {
   const router = useRouter();
   const { fleetId } = useFleet();
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [sheetOpen, setSheetOpen] = useState(false);
   const supabase = createClient();
+
+  const { data: suppliers = [], isPending: loading } = useQuery({
+    queryKey: ["suppliers", fleetId],
+    enabled: !!fleetId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("suppliers")
+        .select("*")
+        .eq("fleet_id", fleetId!)
+        .order("name");
+      if (error) throw error;
+      return (data ?? []) as Supplier[];
+    },
+  });
+
+  function refetchSuppliers() {
+    queryClient.invalidateQueries({ queryKey: ["suppliers", fleetId] });
+  }
 
   async function handleAnonymise(supplierId: string) {
     if (!window.confirm("Are you sure you want to anonymise this supplier's data? This action cannot be undone.")) return;
@@ -56,7 +74,7 @@ function SuppliersPageContent() {
       return;
     }
     toast.success("Supplier data anonymised per POPI request.");
-    fetchSuppliers();
+    refetchSuppliers();
   }
 
   const columns: ColumnDef<Supplier>[] = useMemo(
@@ -101,23 +119,6 @@ function SuppliersPageContent() {
     [fleetId]
   );
 
-  const fetchSuppliers = useCallback(async () => {
-    if (!fleetId) return;
-    setLoading(true);
-    const { data } = await supabase
-      .from("suppliers")
-      .select("*")
-      .eq("fleet_id", fleetId!)
-      .order("name");
-    setSuppliers((data as Supplier[]) ?? []);
-    setLoading(false);
-  }, [fleetId]);
-
-  useEffect(() => {
-    if (!fleetId) return;
-    fetchSuppliers();
-  }, [fetchSuppliers, fleetId]);
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -145,7 +146,7 @@ function SuppliersPageContent() {
       <SupplierFormSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
-        onSaved={fetchSuppliers}
+        onSaved={refetchSuppliers}
       />
     </div>
   );
