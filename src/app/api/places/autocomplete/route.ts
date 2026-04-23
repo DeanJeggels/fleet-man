@@ -11,6 +11,8 @@ import { createClient } from "@/lib/supabase/server";
  * - Requires an authenticated session before spending Places quota, so
  *   anonymous traffic can't burn the key.
  */
+const RATE_LIMIT_PER_MIN = 60;
+
 export async function GET(request: NextRequest) {
   // Auth gate — only logged-in users hit Google
   const supabase = await createClient();
@@ -21,6 +23,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       { status: "UNAUTHORIZED", predictions: [] },
       { status: 401 }
+    );
+  }
+
+  // Rate limit — 60 autocomplete lookups per minute per user. Protects the
+  // Google Maps key quota from a runaway client (e.g. stuck keydown handler).
+  // Reuses the shared `check_rate_limit` RPC so all rate state is in Postgres.
+  const windowStart = new Date(
+    Math.floor(Date.now() / 60000) * 60000
+  ).toISOString();
+  const { data: allowed, error: rlError } = await supabase.rpc(
+    "check_rate_limit",
+    {
+      p_user_id: user.id,
+      p_bucket: "places_autocomplete",
+      p_window: windowStart,
+      p_max: RATE_LIMIT_PER_MIN,
+    }
+  );
+  if (rlError) {
+    console.error("[places/autocomplete] rate_limit rpc error:", rlError);
+    // Fail open so a DB blip doesn't break address search.
+  } else if (allowed === false) {
+    return NextResponse.json(
+      { status: "RATE_LIMITED", predictions: [] },
+      { status: 429 }
     );
   }
 
